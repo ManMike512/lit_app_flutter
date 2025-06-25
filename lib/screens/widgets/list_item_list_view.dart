@@ -20,62 +20,55 @@ class ListItemListView extends StatefulWidget {
 
 class _ListItemListViewState extends State<ListItemListView> {
   final ScrollController scrollController = ScrollController();
-  final PagingController<int, Submission> _pagingController = PagingController(firstPageKey: 1);
+  late final _pagingController = PagingController<int, Submission>(
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) {
+      final results = _fetchPage(pageKey);
+      return results;
+    },
+  );
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   int? listId;
+
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage(pageKey);
-    });
     super.initState();
   }
 
 //TODO fix infinite scroll page counter
-  Future<void> _fetchPage(int pageKey) async {
-    try {
-      if (widget.urlname.isEmpty) {
-        _pagingController.appendLastPage([]);
-        return;
-      }
-      final ListItem newItems = await api.getListItems(widget.urlname, page: pageKey, searchTerm: _searchController.text);
+  Future<List<Submission>> _fetchPage(int pageKey) async {
+    if (widget.urlname.isEmpty) {
+      return [];
+    }
+    final ListItem newItems = await api.getListItems(
+      widget.urlname,
+      page: pageKey,
+      searchTerm: _searchController.text,
+    );
+    if (newItems.list?.id != null) {
       setState(() {
         listId = newItems.list?.id;
       });
-
-      final isLastPage = pageKey == newItems.works!.meta.lastPage;
-      if (isLastPage) {
-        _pagingController.appendLastPage(newItems.works!.data);
-      } else {
-        final nextPageKey = pageKey + 1;
-        _pagingController.appendPage(newItems.works!.data, nextPageKey);
-      }
-    } catch (error) {
-      _pagingController.error = error;
     }
+
+    return newItems.works!.data;
   }
 
   Future<void> _refresh() async {
     _pagingController.refresh();
   }
 
-  onChangeCustom() {
+  void onChangeCustom() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _pagingController.refresh();
     });
   }
 
-  onRemoveFavorite(Submission submission) async {
+  Future<void> onRemoveFavorite(Submission submission) async {
     await api.toggleListItem(submission.id, listId!, false);
-
-    List<Submission>? olditems = _pagingController.itemList;
-    olditems?.removeWhere((element) => element.id == submission.id);
-    _pagingController.itemList = [];
-    if (olditems != null) {
-      _pagingController.appendLastPage(olditems);
-    }
+    _pagingController.refresh(); // This will reload the list and remove the deleted item
   }
 
   @override
@@ -121,13 +114,17 @@ class _ListItemListViewState extends State<ListItemListView> {
         Expanded(
           child: RefreshIndicator(
             onRefresh: _refresh,
-            child: PagedListView<int, Submission>(
-              padding: const EdgeInsets.only(top: 10),
-              pagingController: _pagingController,
-              builderDelegate: PagedChildBuilderDelegate<Submission>(
-                itemBuilder: (context, item, index) => StoryItem(
-                  submission: item,
-                  onDelete: listId != null ? onRemoveFavorite : null,
+            child: PagingListener(
+              controller: _pagingController,
+              builder: (context, state, fetchNextPage) => PagedListView<int, Submission>(
+                padding: const EdgeInsets.only(top: 10),
+                state: state,
+                fetchNextPage: fetchNextPage,
+                builderDelegate: PagedChildBuilderDelegate<Submission>(
+                  itemBuilder: (context, item, index) => StoryItem(
+                    submission: item,
+                    onDelete: listId != null ? onRemoveFavorite : null,
+                  ),
                 ),
               ),
             ),

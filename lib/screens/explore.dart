@@ -18,29 +18,21 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
-  final PagingController<int, Tag> _tagPagingController = PagingController(firstPageKey: 1);
-  final PagingController<int, Category> _categoryPagingController = PagingController(firstPageKey: 1);
+  late final _tagPagingController = PagingController<int, Tag>(
+    getNextPageKey: (state) => state.items != null && state.items!.isNotEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) => api.getPopularTags(),
+  );
+
+  late final _categoryPagingController = PagingController<int, Category>(
+    getNextPageKey: (state) => state.items != null && state.items!.isNotEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) => api.getCategories(),
+  );
   PersistentTabController get tabcontroller => persistentTabcontroller;
 
   List<Category> categoryItems = [];
 
   @override
   void initState() {
-    litSearchController.categoriesRx.listen((categories) {
-      if (categories.isNotEmpty) {
-        _refreshAndAppendCategories(categories);
-      }
-    });
-
-    _categoryPagingController.appendLastPage(categoryItems);
-
-    _categoryPagingController.addPageRequestListener((pageKey) {
-      litSearchController.getCategories();
-    });
-
-    _tagPagingController.addPageRequestListener((pageKey) {
-      _fetchPage();
-    });
     super.initState();
   }
 
@@ -62,24 +54,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _fetchPage() async {
-    try {
-      _tagPagingController.itemList = [];
-
-      final List<Tag> newItems = await api.getPopularTags();
-
-      _tagPagingController.appendLastPage(newItems.toList());
-    } catch (error) {
-      _tagPagingController.error = error;
-    }
-  }
-
-  void _refreshAndAppendCategories(List<Category> categories) {
-    _categoryPagingController.refresh();
-    final categoryItems = categories.where((cat) => cat.type == "story" && cat.id != 1).toList();
-    _categoryPagingController.appendLastPage(categoryItems);
   }
 
   Widget popularTags() {
@@ -110,32 +84,37 @@ class _ExploreScreenState extends State<ExploreScreen> {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () => Future.sync(() => _tagPagingController.refresh()),
-                child: PagedListView<int, Tag>(
-                  pagingController: _tagPagingController,
-                  builderDelegate: PagedChildBuilderDelegate<Tag>(
-                    itemBuilder: (context, item, index) => Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(item.tag),
-                        trailing: Text(
-                          item.count.toString(),
-                          style: const TextStyle(
-                            color: kRed,
-                            fontSize: 14,
-                          ),
+                child: PagingListener(
+                  controller: _tagPagingController,
+                  builder: (context, state, fetchNextPage) => PagedListView<int, Tag>(
+                    // pagingController: _tagPagingController,
+                    fetchNextPage: fetchNextPage,
+                    state: state,
+                    builderDelegate: PagedChildBuilderDelegate<Tag>(
+                      itemBuilder: (context, item, index) => Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        onTap: () {
-                          SearchConfig searchConfig = SearchConfig.tagSearch(
-                            tagList: [item.tag],
-                            sortOrder: SearchSortField.voteDesc,
-                            sortString: SearchString.voteDesc,
-                          );
-                          navigateToSearch(searchConfig);
-                        },
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(item.tag),
+                          trailing: Text(
+                            item.count.toString(),
+                            style: const TextStyle(
+                              color: kRed,
+                              fontSize: 14,
+                            ),
+                          ),
+                          onTap: () {
+                            SearchConfig searchConfig = SearchConfig.tagSearch(
+                              tagList: [item.tag],
+                              sortOrder: SearchSortField.voteDesc,
+                              sortString: SearchString.voteDesc,
+                            );
+                            navigateToSearch(searchConfig);
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -176,61 +155,65 @@ class _ExploreScreenState extends State<ExploreScreen> {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () => Future.sync(() => _categoryPagingController.refresh()),
-                child: PagedListView<int, Category>(
-                  pagingController: _categoryPagingController,
-                  builderDelegate: PagedChildBuilderDelegate<Category>(
-                    itemBuilder: (context, item, index) => Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        isThreeLine: true,
-                        tileColor: Theme.of(context).scaffoldBackgroundColor,
-                        title: Text(item.name),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.ldesc),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                InkWell(
-                                  child: const LitBadge(text: 'Top', color: kHotTag),
-                                  onTap: () {
-                                    SearchConfig searchConfig = SearchConfig.categorySearch(
-                                      selectedCategory: item.id,
-                                    );
-                                    navigateToSearch(searchConfig);
-                                    litSearchController.selectedCategory = [item.id.toString()];
-                                  },
-                                ),
-                                InkWell(
-                                  child: const LitBadge(text: 'New', color: kNewTag),
-                                  onTap: () {
-                                    SearchConfig searchConfig = SearchConfig.categorySearch(
-                                      selectedCategory: item.id,
-                                      newOnly: true,
-                                    );
-                                    navigateToSearch(searchConfig);
-                                    litSearchController.selectedCategory = [item.id.toString()];
-                                  },
-                                ),
-                                InkWell(
-                                  child: const LitBadge(text: 'Random', color: kWinnerTag),
-                                  onTap: () {
-                                    SearchConfig searchConfig = SearchConfig.categorySearch(
-                                      selectedCategory: item.id,
-                                      random: true,
-                                    );
-                                    navigateToSearch(searchConfig);
-                                    litSearchController.selectedCategory = [item.id.toString()];
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
+                child: PagingListener(
+                  controller: _categoryPagingController,
+                  builder: (context, state, fetchNextPage) => PagedListView<int, Category>(
+                    fetchNextPage: fetchNextPage,
+                    state: state,
+                    builderDelegate: PagedChildBuilderDelegate<Category>(
+                      itemBuilder: (context, item, index) => Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          isThreeLine: true,
+                          tileColor: Theme.of(context).scaffoldBackgroundColor,
+                          title: Text(item.name),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(item.ldesc),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  InkWell(
+                                    child: const LitBadge(text: 'Top', color: kHotTag),
+                                    onTap: () {
+                                      SearchConfig searchConfig = SearchConfig.categorySearch(
+                                        selectedCategory: item.id,
+                                      );
+                                      navigateToSearch(searchConfig);
+                                      litSearchController.selectedCategory = [item.id.toString()];
+                                    },
+                                  ),
+                                  InkWell(
+                                    child: const LitBadge(text: 'New', color: kNewTag),
+                                    onTap: () {
+                                      SearchConfig searchConfig = SearchConfig.categorySearch(
+                                        selectedCategory: item.id,
+                                        newOnly: true,
+                                      );
+                                      navigateToSearch(searchConfig);
+                                      litSearchController.selectedCategory = [item.id.toString()];
+                                    },
+                                  ),
+                                  InkWell(
+                                    child: const LitBadge(text: 'Random', color: kWinnerTag),
+                                    onTap: () {
+                                      SearchConfig searchConfig = SearchConfig.categorySearch(
+                                        selectedCategory: item.id,
+                                        random: true,
+                                      );
+                                      navigateToSearch(searchConfig);
+                                      litSearchController.selectedCategory = [item.id.toString()];
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

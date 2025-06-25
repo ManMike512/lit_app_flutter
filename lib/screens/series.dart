@@ -14,24 +14,33 @@ class SeriesScreen extends StatefulWidget {
 }
 
 class _SeriesScreenState extends State<SeriesScreen> {
-  final PagingController<int, Submission> _pagingController = PagingController(firstPageKey: 1);
-  Future<void> _fetchPage(int pageKey) async {
+  late final _pagingController = PagingController<int, Submission>(
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) {
+      final results = _fetchPage(pageKey);
+      return results;
+    },
+  );
+
+  Future<List<Submission>> _fetchPage(int pageKey) async {
     try {
       final story = await api.getStory(widget.story.url);
-      final newItems =
-          story.submission?.series.meta.id != null ? await api.getSeries(story.submission!.series.meta.id) : <Submission>[];
+      List<Submission> newItems = [];
+      if (story.submission?.series.meta.id != null) {
+        newItems = await api.getSeries(story.submission!.series.meta.id);
+      }
 
-      _pagingController.appendLastPage(newItems);
+      // _pagingController.appendLastPage(newItems);
+      return newItems;
     } catch (error) {
-      _pagingController.error = error;
+      // _pagingController.error = error;
+      rethrow;
     }
   }
 
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage(pageKey);
-    });
+    _pagingController.refresh();
     super.initState();
   }
 
@@ -48,7 +57,6 @@ class _SeriesScreenState extends State<SeriesScreen> {
             Expanded(
               child: LitPagedListView<Submission>(
                 pagingController: _pagingController,
-                fetchPage: _fetchPage,
                 itemBuilder: (context, item, index) {
                   return Center(
                       child: StoryItem(

@@ -18,10 +18,16 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  late final PagingController<int, ActivityData> _pagingController;
+  late final _pagingController = PagingController<int, ActivityData>(
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) {
+      final results = _fetchPage(pageKey);
+      return results;
+    },
+  );
 
   int? lastId;
-  Future<void> _fetchPage(int pageKey) async {
+  Future<List<ActivityData>> _fetchPage(int pageKey) async {
     try {
       if (pageKey == 1) {
         lastId = null;
@@ -35,24 +41,20 @@ class _FeedScreenState extends State<FeedScreen> {
 
       final nextPageItems = await api.getFeed(limit: limit, lastId: lastId);
       if (nextPageItems.data.isEmpty) {
-        _pagingController.appendLastPage(newItems.data);
-        return;
+        // _pagingController.appendLastPage(newItems.data);
+        return newItems.data;
       }
-      final nextPageKey = pageKey + 1;
-      _pagingController.appendPage(newItems.data, nextPageKey);
+      // final nextPageKey = pageKey + 1;
+      // _pagingController.appendPage(newItems.data, nextPageKey);
+      return newItems.data;
     } catch (error) {
-      _pagingController.error = error;
+      // _pagingController.error = error;
+      rethrow;
     }
   }
 
   @override
   void initState() {
-    _pagingController = PagingController(firstPageKey: 1);
-    _pagingController.addPageRequestListener((pageKey) {
-      if (loginController.loginState == LoginState.loggedIn) {
-        _fetchPage(pageKey);
-      }
-    });
     super.initState();
   }
 
@@ -77,7 +79,6 @@ class _FeedScreenState extends State<FeedScreen> {
             Expanded(
               child: LitPagedListView<ActivityData>(
                 pagingController: _pagingController,
-                fetchPage: _fetchPage,
                 itemBuilder: (context, item, index) {
                   return StoryItem(
                     submission: item.what,

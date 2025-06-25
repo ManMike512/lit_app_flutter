@@ -21,45 +21,40 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   TextEditingController searchController = TextEditingController();
-
-  final PagingController<int, ReadHistory> _pagingController = PagingController(firstPageKey: 1);
+  late final _pagingController = PagingController<int, ReadHistory>(
+    getNextPageKey: (state) => state.items != null && state.items!.isNotEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) {
+      final results = _fetchPage();
+      return results;
+    },
+  );
   Timer? _debounce;
 
-  onChangeCustom() {
+  void onChangeCustom() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _pagingController.refresh();
     });
   }
 
-  Future<void> _fetchPage() async {
+  Future<List<ReadHistory>> _fetchPage() async {
     try {
       print("fetch history page");
       DBHelper dbHelper = DBHelper();
       await dbHelper.init();
-      _pagingController.itemList = [];
 
       final List<ReadHistory> newItems = await dbHelper.getHistory();
 
-      _pagingController.appendLastPage(newItems
-          .where((item) =>
-              (item.submission.title.toLowerCase().contains(searchController.text.toLowerCase())) ||
-              item.submission.description.toLowerCase().contains(searchController.text.toLowerCase()))
-          .toList());
+      return newItems;
     } catch (error) {
-      _pagingController.error = error;
+      // _pagingController.error = error;
+      print(error);
+      return [];
     }
-  }
-
-  Future<void> _refresh() async {
-    _pagingController.refresh();
   }
 
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage();
-    });
     super.initState();
   }
 
@@ -69,7 +64,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     super.dispose();
   }
 
-  onDeleteHistory(Submission submission) async {
+  Future<void> onDeleteHistory(Submission submission) async {
     DBHelper dbHelper = DBHelper();
     await dbHelper.init();
     await dbHelper.removeHistory(submission.url);
@@ -147,16 +142,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: PagedListView<int, ReadHistory>(
-                pagingController: _pagingController,
-                builderDelegate: PagedChildBuilderDelegate<ReadHistory>(
-                  itemBuilder: (context, item, index) => StoryItem(
-                    submission: item.submission,
-                    onDelete: onDeleteHistory,
-                  ),
-                  noItemsFoundIndicatorBuilder: (_) => const EmptyListIndicator(
-                    subtext: "Maybe try reading something",
+              onRefresh: () => Future.sync(() => _pagingController.refresh()),
+              child: PagingListener(
+                controller: _pagingController,
+                builder: (context, state, fetchNextPage) => PagedListView<int, ReadHistory>(
+                  fetchNextPage: fetchNextPage,
+                  state: state,
+                  builderDelegate: PagedChildBuilderDelegate<ReadHistory>(
+                    itemBuilder: (context, item, index) => StoryItem(
+                      submission: item.submission,
+                      onDelete: onDeleteHistory,
+                    ),
+                    noItemsFoundIndicatorBuilder: (_) => const EmptyListIndicator(
+                      subtext: "Maybe try reading something",
+                    ),
                   ),
                 ),
               ),

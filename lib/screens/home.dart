@@ -26,17 +26,17 @@ class _HomeScreenState extends State<HomeScreen> {
         () => PersistentTabView(
           gestureNavigationEnabled: true,
           controller: persistentTabcontroller,
-          navBarHeight: kBottomNavigationBarHeight + 5,
+          // navBarHeight: kBottomNavigationBarHeight + 5,
           tabs: [
             PersistentTabConfig(
               screen: const HistoryDownloadsScreen(),
-              onSelectedTabPressWhenNoScreensPushed: () {
-                historyDownloadController.selectedIndex = historyDownloadController.selectedIndex == 1 ? 0 : 1;
-                historyDownloadController.selectedTabIcon =
-                    historyDownloadController.selectedIndex == 0 ? const Icon(Ionicons.time) : const Icon(Ionicons.download);
-                historyDownloadController.selectedTabName =
-                    historyDownloadController.selectedIndex == 0 ? "History" : "Downloads";
-              },
+              // onSelectedTabPressWhenNoScreensPushed: () {
+              //   historyDownloadController.selectedIndex = historyDownloadController.selectedIndex == 1 ? 0 : 1;
+              //   historyDownloadController.selectedTabIcon =
+              //       historyDownloadController.selectedIndex == 0 ? const Icon(Ionicons.time) : const Icon(Ionicons.download);
+              //   historyDownloadController.selectedTabName =
+              //       historyDownloadController.selectedIndex == 0 ? "History" : "Downloads";
+              // },
               item: ItemConfig(
                 icon: historyDownloadController.selectedTabIcon,
                 title: (historyDownloadController.selectedTabName),

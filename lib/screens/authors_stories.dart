@@ -16,46 +16,35 @@ class AuthorsStoriesScreen extends StatefulWidget {
 }
 
 class _AuthorsStoriesScreenState extends State<AuthorsStoriesScreen> {
-  final PagingController<int, Submission> _pagingController = PagingController(firstPageKey: 1);
-  int maxPages = 1;
-  Future<void> _fetchPage(int pageKey) async {
+  late final _pagingController = PagingController<int, Submission>(
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) {
+      final results = _fetchPage(pageKey);
+      return results;
+    },
+  );
+
+  Future<List<Submission>> _fetchPage(int pageKey) async {
     try {
-      // final story = await api.getStory(widget.story.url);
-      if (pageKey == 1) {
-        final result = await api.getAuthorStories(widget.author.username);
-        final newItems = result.data;
-        if (result.meta != null) {
-          maxPages = (result.meta!.total / (result.meta!.pageSize)).ceil();
-        }
-
-        if (pageKey == maxPages) {
-          _pagingController.appendLastPage(newItems);
-        } else {
-          _pagingController.appendPage(newItems, pageKey + 1);
-        }
-      } else {
-        if (pageKey <= maxPages) {
-          final result = await api.getAuthorStories(widget.author.username, page: pageKey);
-          final newItems = result.data;
-
-          if (pageKey == maxPages) {
-            _pagingController.appendLastPage(newItems);
-          } else {
-            _pagingController.appendPage(newItems, pageKey + 1);
-          }
-        }
-      }
+      final result = await api.getAuthorStories(widget.author.username, page: pageKey);
+      final newItems = result.data;
+      // maxPages = (result.meta.total / (result.meta.pageSize)).ceil();
+      return newItems;
     } catch (error) {
-      _pagingController.error = error;
+      // Optionally handle error
+      rethrow;
     }
   }
 
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage(pageKey);
-    });
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _pagingController.dispose();
+    super.dispose();
   }
 
   @override
@@ -79,7 +68,6 @@ class _AuthorsStoriesScreenState extends State<AuthorsStoriesScreen> {
           Expanded(
             child: LitPagedListView<Submission>(
               pagingController: _pagingController,
-              fetchPage: _fetchPage,
               itemBuilder: (context, item, index) {
                 return Center(
                     child: StoryItem(

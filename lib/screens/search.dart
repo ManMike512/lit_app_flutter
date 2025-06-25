@@ -38,7 +38,15 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _pagingController = widget.pagingController ?? PagingController(firstPageKey: 1);
+    _pagingController = widget.pagingController ??
+        PagingController<int, Submission>(
+          getNextPageKey: (state) =>
+              state.pages == null || state.pages!.length + 1 < litSearchController.maxPage ? state.nextIntPageKey : null,
+          fetchPage: (pageKey) {
+            final results = _fetchPage(pageKey);
+            return results;
+          },
+        );
 
     searchFieldTextController.text = litSearchController.searchTerm;
 
@@ -56,9 +64,10 @@ class _SearchScreenState extends State<SearchScreen> {
       litSearchController.isWinner = searchConfig!.isWinner;
       litSearchController.isEditorsChoice = searchConfig!.isEditorsChoice;
     }
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage(pageKey);
-    });
+    _pagingController.refresh();
+    // _pagingController.addPageRequestListener((pageKey) {
+    //   _fetchPage(pageKey);
+    // });
     ever(litSearchController.searchTermRx, (_) {
       if (!mounted) return;
       _pagingController.refresh();
@@ -77,31 +86,23 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  Future<void> _fetchPage(int pageKey) async {
+  Future<List<Submission>> _fetchPage(int pageKey) async {
     try {
       litSearchController.page = pageKey;
       if (litSearchController.searchTerm.isEmpty &&
           litSearchController.tagList.isEmpty &&
           (litSearchController.categorySearch == true && litSearchController.categorySearchId == null)) {
-        if (!mounted) return;
-        _pagingController.appendPage([], 1);
-        return;
+        if (!mounted) return [];
+        return [];
       }
       await litSearchController.search();
       final newItems = litSearchController.searchResults;
 
-      final isLastPage = pageKey == litSearchController.maxPage;
-      if (isLastPage) {
-        if (!mounted) return;
-        _pagingController.appendLastPage(newItems);
-      } else {
-        if (!mounted) return;
-        final nextPageKey = pageKey + 1;
-        _pagingController.appendPage(newItems, nextPageKey);
-      }
+      return newItems;
     } catch (error) {
-      if (!mounted) return;
-      _pagingController.error = error;
+      if (!mounted) rethrow;
+      // _pagingController.error = error;
+      rethrow;
     }
   }
 
@@ -181,7 +182,6 @@ class _SearchScreenState extends State<SearchScreen> {
               Expanded(
                 child: LitPagedListView<Submission>(
                   pagingController: _pagingController,
-                  fetchPage: _fetchPage,
                   itemBuilder: (context, item, index) {
                     return Center(child: StoryItem(submission: item));
                   },

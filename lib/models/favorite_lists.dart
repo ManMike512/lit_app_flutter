@@ -2,7 +2,7 @@ class Lists {
   final int id;
   final String description;
   final int storiesCount;
-  final String submissionType;
+  final String? submissionType;
   final String title;
   final String urlname;
   final int userId;
@@ -15,7 +15,7 @@ class Lists {
     required this.id,
     required this.description,
     required this.storiesCount,
-    required this.submissionType,
+    this.submissionType,
     required this.title,
     required this.urlname,
     required this.userId,

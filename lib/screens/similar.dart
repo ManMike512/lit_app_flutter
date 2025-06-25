@@ -14,22 +14,14 @@ class SimilarScreen extends StatefulWidget {
 }
 
 class _SimilarScreenState extends State<SimilarScreen> {
-  final PagingController<int, Submission> _pagingController = PagingController(firstPageKey: 1);
-  Future<void> _fetchPage(int pageKey) async {
-    try {
-      final newItems = await api.getSimilarStories(widget.story.url);
-
-      _pagingController.appendLastPage(newItems);
-    } catch (error) {
-      _pagingController.error = error;
-    }
-  }
+  late final _pagingController = PagingController<int, Submission>(
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) => api.getSimilarStories(widget.story.url),
+  );
 
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage(pageKey);
-    });
+    _pagingController.refresh();
     super.initState();
   }
 
@@ -46,7 +38,6 @@ class _SimilarScreenState extends State<SimilarScreen> {
             Expanded(
               child: LitPagedListView<Submission>(
                 pagingController: _pagingController,
-                fetchPage: _fetchPage,
                 itemBuilder: (context, item, index) {
                   return Center(
                       child: StoryItem(

@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class LitPagedListView<T> extends StatefulWidget {
-  const LitPagedListView(
-      {super.key, required this.fetchPage, required this.itemBuilder, required this.pagingController, this.emptyListBuilder});
+  const LitPagedListView({super.key, required this.itemBuilder, required this.pagingController, this.emptyListBuilder});
 
-  final void Function(int pageKey) fetchPage;
   final Widget Function(BuildContext, dynamic, int) itemBuilder;
   final Widget Function(BuildContext)? emptyListBuilder;
   final PagingController<int, T> pagingController;
@@ -36,11 +34,16 @@ class _LitPagedListViewState<T> extends State<LitPagedListView<T>> {
               Expanded(
                 child: CustomScrollView(
                   slivers: [
-                    PagedSliverList<int, T>(
-                      pagingController: widget.pagingController,
-                      builderDelegate: PagedChildBuilderDelegate<T>(
-                        itemBuilder: widget.itemBuilder,
-                        noItemsFoundIndicatorBuilder: widget.emptyListBuilder,
+                    PagingListener(
+                      controller: widget.pagingController,
+                      builder: (context, state, fetchNextPage) => PagedSliverList<int, T>(
+                        // pagingController: widget.pagingController,
+                        fetchNextPage: fetchNextPage,
+                        state: state,
+                        builderDelegate: PagedChildBuilderDelegate<T>(
+                          itemBuilder: widget.itemBuilder,
+                          noItemsFoundIndicatorBuilder: widget.emptyListBuilder,
+                        ),
                       ),
                     ),
                   ],

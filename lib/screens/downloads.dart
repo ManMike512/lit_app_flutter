@@ -22,31 +22,32 @@ class DownloadScreen extends StatefulWidget {
 class _DownloadScreenState extends State<DownloadScreen> {
   TextEditingController searchController = TextEditingController();
 
-  final PagingController<int, StoryDownload> _pagingController = PagingController(firstPageKey: 1);
+  late final _pagingController = PagingController<int, StoryDownload>(
+    getNextPageKey: (state) => state.items != null && state.items!.isNotEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) {
+      final results = _fetchPage();
+      return results;
+    },
+  );
   Timer? _debounce;
 
-  onChangeCustom() {
+  void onChangeCustom() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       _pagingController.refresh();
     });
   }
 
-  Future<void> _fetchPage() async {
+  Future<List<StoryDownload>> _fetchPage() async {
     try {
       DBHelper dbHelper = DBHelper();
       await dbHelper.init();
-      _pagingController.itemList = [];
 
       final List<StoryDownload> newItems = await dbHelper.getDownloads();
 
-      _pagingController.appendLastPage(newItems
-          .where((item) =>
-              (item.submission.title.toLowerCase().contains(searchController.text.toLowerCase())) ||
-              item.submission.description.toLowerCase().contains(searchController.text.toLowerCase()))
-          .toList());
+      return newItems;
     } catch (error) {
-      _pagingController.error = error;
+      rethrow;
     }
   }
 
@@ -56,9 +57,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   @override
   void initState() {
-    _pagingController.addPageRequestListener((pageKey) {
-      _fetchPage();
-    });
     super.initState();
   }
 
@@ -68,7 +66,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     super.dispose();
   }
 
-  onDeleteDownload(Submission submission) async {
+  Future<void> onDeleteDownload(Submission submission) async {
     DBHelper dbHelper = DBHelper();
     await dbHelper.init();
     await dbHelper.removeDownload(submission.url);
@@ -147,15 +145,19 @@ class _DownloadScreenState extends State<DownloadScreen> {
           Expanded(
             child: RefreshIndicator(
               onRefresh: _refresh,
-              child: PagedListView<int, StoryDownload>(
-                pagingController: _pagingController,
-                builderDelegate: PagedChildBuilderDelegate<StoryDownload>(
-                  itemBuilder: (context, item, index) => StoryItem(
-                    submission: item.submission,
-                    onDelete: onDeleteDownload,
-                  ),
-                  noItemsFoundIndicatorBuilder: (_) => const EmptyListIndicator(
-                    subtext: "Maybe try downloading something",
+              child: PagingListener(
+                controller: _pagingController,
+                builder: (context, state, fetchNextPage) => PagedListView<int, StoryDownload>(
+                  state: state,
+                  fetchNextPage: fetchNextPage,
+                  builderDelegate: PagedChildBuilderDelegate<StoryDownload>(
+                    itemBuilder: (context, item, index) => StoryItem(
+                      submission: item.submission,
+                      onDelete: onDeleteDownload,
+                    ),
+                    noItemsFoundIndicatorBuilder: (_) => const EmptyListIndicator(
+                      subtext: "Maybe try downloading something",
+                    ),
                   ),
                 ),
               ),
