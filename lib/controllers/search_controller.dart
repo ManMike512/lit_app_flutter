@@ -145,27 +145,27 @@ class SearchController extends GetxController {
         _logger.info('page: $page');
         _logger.info('maxPage: $maxPage');
         return;
-      } else {
-        if (searchTerm.isEmpty || searchTerm.length < 3) {
-          return;
-        }
-        SearchResult result = await api.beginSearch(searchTerm,
-            page: page,
-            categories: selectedCategory,
-            isPopular: isPopular,
-            isWinner: isWinner,
-            isEditorsChoice: isEditorsChoice,
-            sortOrder: sortString);
-        if (page == 1 && result.meta != null) {
-          maxPage = (result.meta!.total / (result.meta!.pageSize)).ceil();
-        }
-
-        List<Submission> results = result.data;
-        searchResults = results;
-
-        _logger.info('page: $page');
-        _logger.info('maxPage: $maxPage');
       }
+    } else {
+      if (searchTerm.isEmpty || searchTerm.length < 3) {
+        return;
+      }
+      SearchResult result = await api.beginSearch(searchTerm,
+          page: page,
+          categories: selectedCategory,
+          isPopular: isPopular,
+          isWinner: isWinner,
+          isEditorsChoice: isEditorsChoice,
+          sortOrder: sortString);
+      if (page == 1 && result.meta != null) {
+        maxPage = (result.meta!.total / (result.meta!.pageSize)).ceil();
+      }
+
+      List<Submission> results = result.data;
+      searchResults = results;
+
+      _logger.info('page: $page');
+      _logger.info('maxPage: $maxPage');
     }
   }
 }
