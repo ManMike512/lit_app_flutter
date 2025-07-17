@@ -34,4 +34,20 @@ class PrefsFunctions {
       scrollController.jumpTo(lastPagePosition);
     });
   }
+
+  void saveSearchCategories(List<String> categories) {
+    preferences.setStringList('searchCategories', categories);
+  }
+
+  List<String> getSearchCategories() {
+    List<String>? csvCategories = preferences.getStringList('searchCategories');
+
+    // init to no categories
+    if (csvCategories == null) {
+      preferences.setStringList('searchCategories', []);
+      return [];
+    }
+
+    return csvCategories;
+  }
 }

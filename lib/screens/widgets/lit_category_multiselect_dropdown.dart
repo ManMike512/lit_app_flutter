@@ -50,6 +50,9 @@ class _LitMultiCategoriesState extends State<LitMultiCategories> {
             widget.searchController.selectedCategory = [
               ...options.where((option) => option.id != 1).map((option) => option.id.toString())
             ];
+
+            // save search categories to SharedPreferences when selections change
+            prefsFunctions.saveSearchCategories(widget.searchController.selectedCategory);
           },
           items: categoryItems.map((category) {
             return DropdownItem<Category>(

@@ -61,6 +61,9 @@ class _MyAppState extends State<MyApp> {
       loginController.loginState = LoginState.loggedOut;
     }
     await litSearchController.getCategories();
+
+    // read saved search categories from SharedPreferences on app start
+    litSearchController.selectedCategory = prefsFunctions.getSearchCategories();
   }
 
   @override
