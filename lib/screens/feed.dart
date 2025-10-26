@@ -20,8 +20,8 @@ class FeedScreen extends StatefulWidget {
 class _FeedScreenState extends State<FeedScreen> {
   late final _pagingController = PagingController<int, ActivityData>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (pageKey) {
-      final results = _fetchPage(pageKey);
+    fetchPage: (pageKey) async {
+      final results = await _fetchPage(pageKey);
       return results;
     },
   );
@@ -42,18 +42,8 @@ class _FeedScreenState extends State<FeedScreen> {
 
       lastId = newItems.data.last.id;
 
-      //check if last page
-
-      final nextPageItems = await api.getFeed(limit: limit, lastId: lastId);
-      if (nextPageItems.data.isEmpty) {
-        // _pagingController.appendLastPage(newItems.data);
-        return newItems.data;
-      }
-      // final nextPageKey = pageKey + 1;
-      // _pagingController.appendPage(newItems.data, nextPageKey);
       return newItems.data;
     } catch (error) {
-      // _pagingController.error = error;
       rethrow;
     }
   }
@@ -79,17 +69,15 @@ class _FeedScreenState extends State<FeedScreen> {
   Widget body() {
     return Obx(() {
       if (loginController.loginState == LoginState.loggedIn) {
-        return Expanded(
-          child: LitPagedListView<ActivityData>(
-            pagingController: _pagingController,
-            itemBuilder: (context, item, index) {
-              return StoryItem(
-                submission: item.what,
-              );
-            },
-            emptyListBuilder: (_) => const EmptyListIndicator(
-              text: "No stories in your feed",
-            ),
+        return LitPagedListView<ActivityData>(
+          pagingController: _pagingController,
+          itemBuilder: (context, item, index) {
+            return StoryItem(
+              submission: item.what,
+            );
+          },
+          emptyListBuilder: (_) => const EmptyListIndicator(
+            subtext: "No stories in your feed",
           ),
         );
       } else if (loginController.loginState == LoginState.loggedOut || loginController.loginState == LoginState.failure) {
