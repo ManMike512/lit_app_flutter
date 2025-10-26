@@ -17,7 +17,7 @@ jobs:
       - name: Cache Java
         uses: actions/cache@v3
         with:
-          path: ~/.sdkman/candidates/java
+          path: $JAVA_HOME
           key: ${{ runner.os }}-java-${{ hashFiles('**/pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-java-
@@ -31,7 +31,7 @@ jobs:
       - name: Cache Flutter SDK
         uses: actions/cache@v3
         with:
-          path: ~/flutter
+          path: ~/opt/flutter
           key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.yaml') }}
           restore-keys: |
             ${{ runner.os }}-flutter-
