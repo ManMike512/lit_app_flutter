@@ -44,6 +44,7 @@ class _FeedScreenState extends State<FeedScreen> {
 
       return newItems.data;
     } catch (error) {
+      print('Error fetching feed page: $error');
       rethrow;
     }
   }
