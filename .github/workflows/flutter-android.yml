@@ -64,7 +64,39 @@ jobs:
           echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=keystore.jks" >> android/key.properties
+          echo "storeFile=app/keystore.jks" >> android/key.properties
+
+      - name: Verify Key Files
+        run: |
+          # Check if keystore.jks exists
+          if [ ! -f "android/app/keystore.jks" ]; then
+            echo "Error: keystore.jks not found in android/app/"
+            exit 1
+          fi
+
+          # Check if key.properties exists
+          if [ ! -f "android/key.properties" ]; then
+            echo "Error: key.properties not found in android/"
+            exit 1
+          fi
+
+          # Verify key.properties content
+          if ! grep -q "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" android/key.properties; then
+            echo "Error: storePassword is not set correctly in key.properties"
+            exit 1
+          fi
+          if ! grep -q "keyPassword=${{ secrets.KEY_PASSWORD }}" android/key.properties; then
+            echo "Error: keyPassword is not set correctly in key.properties"
+            exit 1
+          fi
+          if ! grep -q "keyAlias=${{ secrets.KEY_ALIAS }}" android/key.properties; then
+            echo "Error: keyAlias is not set correctly in key.properties"
+            exit 1
+          fi
+          if ! grep -q "storeFile=app/keystore.jks" android/key.properties; then
+            echo "Error: storeFile is not set correctly in key.properties"
+            exit 1
+          fi
 
       - name: Build APK
         run: flutter build apk --release --split-per-abi
