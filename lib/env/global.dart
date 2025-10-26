@@ -31,7 +31,7 @@ Future<void> initSharedPreferences() async {
 
 PersistentTabController persistentTabcontroller = PersistentTabController(initialIndex: 0);
 
-navigateToSearch(SearchConfig searchConfig) {
+void navigateToSearch(SearchConfig searchConfig) {
   litSearchController.categorySearch = searchConfig.isCategorySearch;
   litSearchController.newOnly = searchConfig.newOnly;
   litSearchController.random = searchConfig.random;

@@ -4,7 +4,7 @@ import 'package:lit_reader/models/submission.dart';
 // import 'package:lit_reader/models/tag.dart';
 
 class ActivityData {
-  final int id;
+  final String id;
   final String action;
   final int when;
   final Who who;

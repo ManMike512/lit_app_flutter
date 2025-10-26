@@ -13,7 +13,7 @@ class ListController extends GetxController {
   bool get isBusy => _isBusy.value;
   set isBusy(bool value) => _isBusy.value = value;
 
-  updateList(int listId, {bool increment = true}) {
+  void updateList(int listId, {bool increment = true}) {
     List<Lists> newList = List.from(list);
     final index = newList.indexWhere((element) => element.id == listId);
     if (index != -1) {
@@ -24,7 +24,7 @@ class ListController extends GetxController {
     }
   }
 
-  fetchLists() async {
+  Future<void> fetchLists() async {
     isBusy = true;
     list = await api.getLists();
     isBusy = false;

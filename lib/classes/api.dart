@@ -28,7 +28,7 @@ final _logger = Logger('API');
 final cookieJar = CookieJar();
 
 class API {
-  login(username, password) async {
+  Future<Token> login(String username, String password) async {
     Account account = Account(login: username, password: password);
     try {
       dioController.dio.interceptors.add(CookieManager(cookieJar));
@@ -52,8 +52,6 @@ class API {
       print(e);
       toast(e.toString());
       return Token(token: null, expires: null);
-    } finally {
-      //
     }
   }
 
@@ -88,7 +86,7 @@ class API {
     }
   }
 
-  logout() async {
+  Future<bool> logout() async {
     await loginController.isTokenValid();
     if (loginController.loginState != LoginState.loggedIn) {
       // loginController.dispose();
@@ -295,7 +293,7 @@ class API {
     }
   }
 
-  Future<ActivityWall> getFeed({int limit = 25, int? lastId}) async {
+  Future<ActivityWall> getFeed({int limit = 25, String? lastId}) async {
     await loginController.isTokenValid();
     if (loginController.loginState != LoginState.loggedIn) {
       if (loginController.username.isNotEmpty && loginController.password.isNotEmpty) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:lit_reader/env/global.dart';
+import 'package:lit_reader/models/story.dart';
 import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/screens/widgets/paged_list_view.dart';
 import 'package:lit_reader/screens/widgets/story_item.dart';
@@ -14,9 +15,13 @@ class SeriesScreen extends StatefulWidget {
 }
 
 class _SeriesScreenState extends State<SeriesScreen> {
+  Story? story;
   late final _pagingController = PagingController<int, Submission>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) {
+      if (pageKey > 1) {
+        return [];
+      }
       final results = _fetchPage(pageKey);
       return results;
     },
@@ -24,16 +29,13 @@ class _SeriesScreenState extends State<SeriesScreen> {
 
   Future<List<Submission>> _fetchPage(int pageKey) async {
     try {
-      final story = await api.getStory(widget.story.url);
+      story ??= await api.getStory(widget.story.url);
       List<Submission> newItems = [];
-      if (story.submission?.series.meta.id != null) {
-        newItems = await api.getSeries(story.submission!.series.meta.id);
+      if (story?.submission?.series.meta.id != null) {
+        newItems = await api.getSeries(story!.submission!.series.meta.id);
       }
-
-      // _pagingController.appendLastPage(newItems);
       return newItems;
     } catch (error) {
-      // _pagingController.error = error;
       rethrow;
     }
   }
@@ -49,6 +51,9 @@ class _SeriesScreenState extends State<SeriesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Series'),
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 1),

@@ -10,6 +10,7 @@ import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/screens/widgets/drawer_widget.dart';
 import 'package:lit_reader/screens/widgets/empty_list_indicator.dart';
 import 'package:lit_reader/screens/widgets/lit_search_bar.dart';
+import 'package:lit_reader/screens/widgets/paged_list_view.dart';
 import 'package:lit_reader/screens/widgets/story_item.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -22,9 +23,12 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   TextEditingController searchController = TextEditingController();
   late final _pagingController = PagingController<int, ReadHistory>(
-    getNextPageKey: (state) => state.items != null && state.items!.isNotEmpty ? null : state.nextIntPageKey,
-    fetchPage: (pageKey) {
-      final results = _fetchPage();
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
+    fetchPage: (pageKey) async {
+      if (pageKey > 1) {
+        return [];
+      }
+      final results = await _fetchPage();
       return results;
     },
   );
@@ -68,7 +72,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     DBHelper dbHelper = DBHelper();
     await dbHelper.init();
     await dbHelper.removeHistory(submission.url);
-    await _fetchPage();
+    _pagingController.refresh();
     print('Deleted: ${submission.title}');
   }
 
@@ -141,23 +145,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
             height: 10,
           ),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => Future.sync(() => _pagingController.refresh()),
-              child: PagingListener(
-                controller: _pagingController,
-                builder: (context, state, fetchNextPage) => PagedListView<int, ReadHistory>(
-                  fetchNextPage: fetchNextPage,
-                  state: state,
-                  builderDelegate: PagedChildBuilderDelegate<ReadHistory>(
-                    itemBuilder: (context, item, index) => StoryItem(
-                      submission: item.submission,
-                      onDelete: onDeleteHistory,
-                    ),
-                    noItemsFoundIndicatorBuilder: (_) => const EmptyListIndicator(
-                      subtext: "Maybe try reading something",
-                    ),
-                  ),
-                ),
+            child: LitPagedListView<ReadHistory>(
+              pagingController: _pagingController,
+              itemBuilder: (context, item, index) {
+                return StoryItem(
+                  submission: item.submission,
+                );
+              },
+              emptyListBuilder: (_) => const EmptyListIndicator(
+                subtext: "Maybe try reading something",
               ),
             ),
           ),

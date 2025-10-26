@@ -6,7 +6,7 @@ import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 class LitPagedListView<T> extends StatefulWidget {
   const LitPagedListView({super.key, required this.itemBuilder, required this.pagingController, this.emptyListBuilder});
 
-  final Widget Function(BuildContext, dynamic, int) itemBuilder;
+  final Widget Function(BuildContext, T, int) itemBuilder;
   final Widget Function(BuildContext)? emptyListBuilder;
   final PagingController<int, T> pagingController;
   @override

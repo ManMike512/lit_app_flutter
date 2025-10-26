@@ -7,6 +7,7 @@ import 'package:lit_reader/env/consts.dart';
 import 'package:lit_reader/env/global.dart';
 import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/screens/widgets/drawer_widget.dart';
+import 'package:lit_reader/screens/widgets/empty_list_indicator.dart';
 import 'package:lit_reader/screens/widgets/lit_category_multiselect_dropdown.dart';
 import 'package:lit_reader/screens/widgets/lit_search_bar.dart';
 import 'package:lit_reader/screens/widgets/lit_search_tag_bar.dart';
@@ -185,6 +186,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   itemBuilder: (context, item, index) {
                     return Center(child: StoryItem(submission: item));
                   },
+                  emptyListBuilder: (_) => const EmptyListIndicator(
+                    subtext: "No results found",
+                  ),
                 ),
               ),
             ],

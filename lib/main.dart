@@ -27,7 +27,7 @@ Future<void> main() async {
   runApp(const OverlaySupport(child: MyApp()));
 }
 
-_initServices() {
+void _initServices() {
   try {
     ioc.registerSingleton<LogController>(LogController());
     ioc.registerSingleton<DioController>(DioController());

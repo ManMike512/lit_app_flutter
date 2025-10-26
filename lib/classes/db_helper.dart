@@ -6,7 +6,6 @@ import 'package:lit_reader/models/read_history.dart';
 import 'package:lit_reader/models/story_download.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
 
 class DBHelper {
@@ -18,7 +17,7 @@ class DBHelper {
     // init();
   }
 
-  init() async {
+  Future<void> init() async {
     final docDir = await getApplicationDocumentsDirectory();
     final dbPath = join(docDir.path, 'literotica', 'lit.db');
 
@@ -27,7 +26,7 @@ class DBHelper {
     downloadStore = stringMapStoreFactory.store('downloads'); //creates/finds a table
   }
 
-  addHistory(String key, ReadHistory value) async {
+  Future<void> addHistory(String key, ReadHistory value) async {
     try {
       print("adding history for $key");
       final record = historyStore.record(key);
@@ -80,7 +79,7 @@ class DBHelper {
     await historyStore.delete(db);
   }
 
-  addDownload(String key, StoryDownload value) async {
+  Future<void> addDownload(String key, StoryDownload value) async {
     final record = downloadStore.record(key);
     final val = jsonEncode(value.toJson());
     await record.put(db, val);

@@ -10,6 +10,7 @@ import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/screens/widgets/drawer_widget.dart';
 import 'package:lit_reader/screens/widgets/empty_list_indicator.dart';
 import 'package:lit_reader/screens/widgets/lit_search_bar.dart';
+import 'package:lit_reader/screens/widgets/paged_list_view.dart';
 import 'package:lit_reader/screens/widgets/story_item.dart';
 
 class DownloadScreen extends StatefulWidget {
@@ -23,8 +24,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
   TextEditingController searchController = TextEditingController();
 
   late final _pagingController = PagingController<int, StoryDownload>(
-    getNextPageKey: (state) => state.items != null && state.items!.isNotEmpty ? null : state.nextIntPageKey,
+    getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) {
+      if (pageKey > 1) {
+        return [];
+      }
       final results = _fetchPage();
       return results;
     },
@@ -51,10 +55,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
     }
   }
 
-  Future<void> _refresh() async {
-    _pagingController.refresh();
-  }
-
   @override
   void initState() {
     super.initState();
@@ -70,7 +70,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     DBHelper dbHelper = DBHelper();
     await dbHelper.init();
     await dbHelper.removeDownload(submission.url);
-    await _fetchPage();
+    _pagingController.refresh();
     print('Deleted: ${submission.title}');
   }
 
@@ -143,23 +143,16 @@ class _DownloadScreenState extends State<DownloadScreen> {
             height: 10,
           ),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refresh,
-              child: PagingListener(
-                controller: _pagingController,
-                builder: (context, state, fetchNextPage) => PagedListView<int, StoryDownload>(
-                  state: state,
-                  fetchNextPage: fetchNextPage,
-                  builderDelegate: PagedChildBuilderDelegate<StoryDownload>(
-                    itemBuilder: (context, item, index) => StoryItem(
-                      submission: item.submission,
-                      onDelete: onDeleteDownload,
-                    ),
-                    noItemsFoundIndicatorBuilder: (_) => const EmptyListIndicator(
-                      subtext: "Maybe try downloading something",
-                    ),
-                  ),
-                ),
+            child: LitPagedListView<StoryDownload>(
+              pagingController: _pagingController,
+              itemBuilder: (context, item, index) {
+                return StoryItem(
+                  submission: item.submission,
+                  onDelete: onDeleteDownload,
+                );
+              },
+              emptyListBuilder: (_) => const EmptyListIndicator(
+                subtext: "Maybe try downloading something",
               ),
             ),
           ),

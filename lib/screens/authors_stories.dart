@@ -28,10 +28,8 @@ class _AuthorsStoriesScreenState extends State<AuthorsStoriesScreen> {
     try {
       final result = await api.getAuthorStories(widget.author.username, page: pageKey);
       final newItems = result.data;
-      // maxPages = (result.meta.total / (result.meta.pageSize)).ceil();
       return newItems;
     } catch (error) {
-      // Optionally handle error
       rethrow;
     }
   }
@@ -55,6 +53,9 @@ class _AuthorsStoriesScreenState extends State<AuthorsStoriesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Author\'s Stories'),
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
       body: body(),
     );

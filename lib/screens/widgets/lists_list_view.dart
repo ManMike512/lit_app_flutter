@@ -21,7 +21,7 @@ class _ListsListViewState extends State<ListsListView> {
     super.initState();
   }
 
-  openList(String listName, String urlname) {
+  void openList(String listName, String urlname) {
     Navigator.push(
         context,
         MaterialPageRoute(

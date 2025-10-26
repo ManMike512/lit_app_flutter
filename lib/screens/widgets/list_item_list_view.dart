@@ -19,7 +19,7 @@ class ListItemListView extends StatefulWidget {
 }
 
 class _ListItemListViewState extends State<ListItemListView> {
-  final ScrollController scrollController = ScrollController();
+  final formKey = GlobalKey<FormState>();
   late final _pagingController = PagingController<int, Submission>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) {
@@ -36,7 +36,6 @@ class _ListItemListViewState extends State<ListItemListView> {
     super.initState();
   }
 
-//TODO fix infinite scroll page counter
   Future<List<Submission>> _fetchPage(int pageKey) async {
     if (widget.urlname.isEmpty) {
       return [];
@@ -52,7 +51,7 @@ class _ListItemListViewState extends State<ListItemListView> {
       });
     }
 
-    return newItems.works!.data;
+    return newItems.works?.data ?? [];
   }
 
   Future<void> _refresh() async {
@@ -73,7 +72,6 @@ class _ListItemListViewState extends State<ListItemListView> {
 
   @override
   Widget build(BuildContext context) {
-    final formKey = GlobalKey<FormState>();
     return Scaffold(
       appBar: AppBar(
         surfaceTintColor: Colors.transparent,

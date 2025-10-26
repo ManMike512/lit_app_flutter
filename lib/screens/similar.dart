@@ -16,7 +16,12 @@ class SimilarScreen extends StatefulWidget {
 class _SimilarScreenState extends State<SimilarScreen> {
   late final _pagingController = PagingController<int, Submission>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
-    fetchPage: (pageKey) => api.getSimilarStories(widget.story.url),
+    fetchPage: (pageKey) async {
+      if (pageKey > 1) {
+        return [];
+      }
+      return await api.getSimilarStories(widget.story.url);
+    },
   );
 
   @override
@@ -30,6 +35,9 @@ class _SimilarScreenState extends State<SimilarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Similar'),
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 1),

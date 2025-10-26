@@ -25,7 +25,7 @@ class PrefsFunctions {
     return scrollPosition;
   }
 
-  jumpToLastPage(
+  void jumpToLastPage(
       {required Submission submission, required PageController controller, required ScrollController scrollController}) {
     int lastPage = getLastPage(submission: submission);
     double lastPagePosition = getLastPagePosition(submission: submission);

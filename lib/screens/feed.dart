@@ -26,7 +26,7 @@ class _FeedScreenState extends State<FeedScreen> {
     },
   );
 
-  int? lastId;
+  String? lastId;
   Future<List<ActivityData>> _fetchPage(int pageKey) async {
     try {
       if (pageKey == 1) {
@@ -34,6 +34,11 @@ class _FeedScreenState extends State<FeedScreen> {
       }
       int limit = 25;
       final newItems = await api.getFeed(limit: limit, lastId: lastId);
+
+      if (lastId == newItems.data.last.id) {
+        //no new items
+        return [];
+      }
 
       lastId = newItems.data.last.id;
 
@@ -74,22 +79,18 @@ class _FeedScreenState extends State<FeedScreen> {
   Widget body() {
     return Obx(() {
       if (loginController.loginState == LoginState.loggedIn) {
-        return Column(
-          children: [
-            Expanded(
-              child: LitPagedListView<ActivityData>(
-                pagingController: _pagingController,
-                itemBuilder: (context, item, index) {
-                  return StoryItem(
-                    submission: item.what,
-                  );
-                },
-                emptyListBuilder: (_) => const EmptyListIndicator(
-                  text: "No stories in your feed",
-                ),
-              ),
+        return Expanded(
+          child: LitPagedListView<ActivityData>(
+            pagingController: _pagingController,
+            itemBuilder: (context, item, index) {
+              return StoryItem(
+                submission: item.what,
+              );
+            },
+            emptyListBuilder: (_) => const EmptyListIndicator(
+              text: "No stories in your feed",
             ),
-          ],
+          ),
         );
       } else if (loginController.loginState == LoginState.loggedOut || loginController.loginState == LoginState.failure) {
         return const Padding(

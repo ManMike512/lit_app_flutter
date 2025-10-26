@@ -31,22 +31,11 @@ class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
-
-    // author = widget.submission.author;
     super.initState();
     setInitState();
   }
 
-  setInitState() async {
-    // if(author == null){
-    //   await api.getAuthor(widget.submission.a.toString()).then((value) {
-    //     setState(() {
-    //       author = value;
-    //     });
-    //   });
-    // }
-
+  Future<void> setInitState() async {
     await api.getListsWithStory((widget.submission).id.toString()).then((value) {
       setState(() {
         existingLists = value;

@@ -87,7 +87,7 @@ class StoryItem extends StatelessWidget {
     );
   }
 
-  storyListItem(Submission story) {
+  Widget storyListItem(Submission story) {
     return Container(
       decoration: const BoxDecoration(
         border: Border(

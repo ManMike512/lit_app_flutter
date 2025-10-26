@@ -41,7 +41,7 @@ class _StoryScreenState extends State<StoryScreen> {
 
   bool isDownloaded = false;
 
-  setInitState({Submission? setSubmission}) async {
+  Future<void> setInitState({Submission? setSubmission}) async {
     controller = PageController();
     scrollController = ScrollController();
     initialPage = 0;
@@ -131,7 +131,7 @@ class _StoryScreenState extends State<StoryScreen> {
     super.dispose();
   }
 
-  downloadStory() async {
+  Future<void> downloadStory() async {
     await dbFunctions.downloadStory(submission: submission, pages: pages, isDownloaded: isDownloaded).then(
       (value) {
         setState(() {
