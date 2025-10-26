@@ -7,7 +7,7 @@ import 'package:lit_reader/screens/explore.dart';
 import 'package:lit_reader/screens/feed.dart';
 import 'package:lit_reader/screens/history_downloads.dart';
 import 'package:lit_reader/screens/lists.dart';
-import 'package:lit_reader/screens/search.dart';
+import 'package:lit_reader/screens/search_stories_members.dart';
 // import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
@@ -35,19 +35,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 historyDownloadController.selectedTabName =
                     historyDownloadController.selectedIndex == 0 ? "History" : "Downloads";
               }
+
+              if (persistentTabcontroller.index == 2) {
+                litSearchController.togglePageIndex();
+              }
             },
           ),
           // navBarHeight: kBottomNavigationBarHeight + 5,
           tabs: [
             PersistentTabConfig(
               screen: const HistoryDownloadsScreen(),
-              // onSelectedTabPressWhenNoScreensPushed: () {
-              //   historyDownloadController.selectedIndex = historyDownloadController.selectedIndex == 1 ? 0 : 1;
-              //   historyDownloadController.selectedTabIcon =
-              //       historyDownloadController.selectedIndex == 0 ? const Icon(Ionicons.time) : const Icon(Ionicons.download);
-              //   historyDownloadController.selectedTabName =
-              //       historyDownloadController.selectedIndex == 0 ? "History" : "Downloads";
-              // },
               item: ItemConfig(
                 icon: historyDownloadController.selectedTabIcon,
                 title: (historyDownloadController.selectedTabName),
@@ -65,13 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             PersistentTabConfig(
-              screen: const SearchScreen(),
+              screen: const SearchStoriesMembersScreen(),
               item: ItemConfig(
-                icon: const Icon(
-                  Ionicons.search,
-                  color: Colors.white,
-                ),
-                title: ("Search"),
+                icon: litSearchController.selectedTabIcon,
+                title: litSearchController.selectedTabName,
                 activeForegroundColor: kRed,
                 inactiveForegroundColor: Colors.grey,
               ),

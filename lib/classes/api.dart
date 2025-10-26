@@ -14,6 +14,7 @@ import 'package:lit_reader/models/category_search_result.dart';
 import 'package:lit_reader/models/favorite_lists.dart';
 import 'package:lit_reader/models/list.dart';
 import 'package:lit_reader/models/search_result.dart';
+import 'package:lit_reader/models/search_result_members.dart';
 import 'package:lit_reader/models/story.dart';
 import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/models/tag.dart';
@@ -224,6 +225,7 @@ class API {
 
   Future<SearchResult> getAuthorStories(String authorUserName,
       {int page = 1,
+      String? searchTerm,
       List<String> categories = const [],
       bool isPopular = false,
       bool isWinner = false,
@@ -245,6 +247,9 @@ class API {
     }
     if (sortOrder != null) {
       url += ',"sort":"$sortOrder"';
+    }
+    if (searchTerm != null && searchTerm.isNotEmpty) {
+      url += ',"q":"$searchTerm"';
     }
     url += '}';
 
@@ -344,7 +349,8 @@ class API {
       bool isPopular = false,
       bool isWinner = false,
       bool isEditorsChoice = false,
-      String? sortOrder}) async {
+      String? sortOrder,
+      String? author}) async {
     var url = '${apiUrl}search/stories?params={"q":"$searchTerm","page":$page,"languages":[1]';
 
     if (categories.isNotEmpty) {
@@ -361,6 +367,9 @@ class API {
     }
     if (sortOrder != null) {
       url += ',"sort":"$sortOrder"';
+    }
+    if (author != null && author.isNotEmpty) {
+      url += ',"author":"$author"';
     }
     url += '}';
 
@@ -383,6 +392,41 @@ class API {
       _logger.info(e);
       toast(e.toString());
       return SearchResult.empty();
+    }
+  }
+
+  Future<SearchResultMembers> beginAuthorSearch(String searchTerm,
+      {int page = 1, List<AuthorGender> genders = const [], String? sortOrder}) async {
+    var url = '${apiUrl}search/members?params={"q":"$searchTerm","page":$page,"languages":[1],"user_type":"authors"';
+
+    if (genders.isNotEmpty) {
+      url += ',"sex":[${genders.map((g) => "\"${g.apiValue}\"").join(',')}]';
+    }
+
+    if (sortOrder != null) {
+      url += ',"sort":"$sortOrder"';
+    }
+    url += '}';
+
+    _logger.info('Called: $url');
+
+    try {
+      final response = await dioController.dio.get(
+        url,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      final SearchResultMembers searchResult = SearchResultMembers.fromJson(response.data);
+
+      return searchResult;
+    } catch (e) {
+      _logger.info(e);
+      toast(e.toString());
+      return SearchResultMembers.empty();
     }
   }
 

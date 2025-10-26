@@ -27,3 +27,70 @@ class SearchString {
   // ignore: constant?_identifier_names
   static const String commentsDesc = 'comments desc';
 }
+
+enum AuthorGender {
+  male,
+  female,
+  couple,
+  transgender,
+  transgenderFemale,
+  transgenderMale,
+  intersex,
+  genderQueer,
+  genderless,
+  differentIdentity,
+}
+
+extension AuthorGenderExtension on AuthorGender {
+  // Get the text representation
+  String get text {
+    switch (this) {
+      case AuthorGender.male:
+        return 'Male';
+      case AuthorGender.female:
+        return 'Female';
+      case AuthorGender.couple:
+        return 'Couple';
+      case AuthorGender.transgender:
+        return 'Transgender';
+      case AuthorGender.transgenderFemale:
+        return 'Transgender Female';
+      case AuthorGender.transgenderMale:
+        return 'Transgender Male';
+      case AuthorGender.intersex:
+        return 'Intersex';
+      case AuthorGender.genderQueer:
+        return 'Gender Queer';
+      case AuthorGender.genderless:
+        return 'Genderless';
+      case AuthorGender.differentIdentity:
+        return 'Different Identity';
+    }
+  }
+
+  // Get the API parameter value
+  String get apiValue {
+    switch (this) {
+      case AuthorGender.male:
+        return 'm';
+      case AuthorGender.female:
+        return 'f';
+      case AuthorGender.couple:
+        return 'c';
+      case AuthorGender.transgender:
+        return 't';
+      case AuthorGender.transgenderFemale:
+        return 'o';
+      case AuthorGender.transgenderMale:
+        return 'p';
+      case AuthorGender.intersex:
+        return 'i';
+      case AuthorGender.genderQueer:
+        return 'q';
+      case AuthorGender.genderless:
+        return 'l';
+      case AuthorGender.differentIdentity:
+        return 'd';
+    }
+  }
+}

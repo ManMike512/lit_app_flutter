@@ -68,6 +68,7 @@ class _AuthorsStoriesScreenState extends State<AuthorsStoriesScreen> {
         children: <Widget>[
           Expanded(
             child: LitPagedListView<Submission>(
+              shrinkWrap: true,
               pagingController: _pagingController,
               itemBuilder: (context, item, index) {
                 return Center(

@@ -27,6 +27,9 @@ class _SearchScreenState extends State<SearchScreen> {
   SearchConfig? get searchConfig => widget.searchConfig;
   late PagingController<int, Submission> _pagingController;
   TextEditingController searchFieldTextController = TextEditingController();
+  final searchformKey = GlobalKey<FormState>();
+  final searchTagsformKey = GlobalKey<FormState>();
+  final filtersformKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
@@ -109,17 +112,13 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final searchformKey = GlobalKey<FormState>();
-    final searchTagsformKey = GlobalKey<FormState>();
-    final filtersformKey = GlobalKey<FormState>();
-
     return Obx(
       () => Scaffold(
         drawer: searchConfig == null ? const DrawerWidget() : null,
         appBar: AppBar(
           surfaceTintColor: Theme.of(context).scaffoldBackgroundColor,
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          title: const Text('Search'),
+          title: const Text('Search Stories'),
           leading: searchConfig != null
               ? IconButton(
                   padding: EdgeInsets.zero,
@@ -155,9 +154,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     _pagingController.refresh();
                   }),
             IconButton(
+                icon: const Icon(Icons.person),
+                onPressed: () {
+                  litSearchController.togglePageIndex();
+                }),
+            IconButton(
               icon: const Icon(Ionicons.filter),
               onPressed: () {
-                filterFormDialog(context, filtersformKey);
+                filterFormDialog(context);
               },
             ),
           ],
@@ -198,14 +202,14 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Future<dynamic> filterFormDialog(BuildContext context, GlobalKey<FormState> formKey) {
+  Future<dynamic> filterFormDialog(BuildContext context) {
     return showDialog(
       context: context,
       builder: (context) {
         return SingleChildScrollView(
           child: AlertDialog(
             title: const Text('Filter'),
-            content: searchFilter(formKey),
+            content: searchFilter(),
             actions: <Widget>[
               TextButton(
                 child: const Text('Close'),
@@ -222,12 +226,23 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget searchFilter(GlobalKey<FormState> formKey) {
+  Widget searchFilter() {
+    TextEditingController searchFieldTextController = TextEditingController(text: litSearchController.searchAuthors);
     return Obx(
       () => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
+          LitSearchBar(
+            margin: 0,
+            prefixIcon: Ionicons.person,
+            labelText: "Author",
+            formKey: filtersformKey,
+            onChanged: () {
+              litSearchController.searchAuthors = searchFieldTextController.text;
+            },
+            searchFieldTextController: searchFieldTextController,
+          ),
           CheckboxListTile(
             title: const Text("Search Tags (Commas)"),
             value: litSearchController.searchTags,

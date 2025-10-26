@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 
 class LitPagedListView<T> extends StatefulWidget {
-  const LitPagedListView({super.key, required this.itemBuilder, required this.pagingController, this.emptyListBuilder});
+  const LitPagedListView(
+      {super.key, required this.itemBuilder, required this.pagingController, this.emptyListBuilder, this.shrinkWrap = false});
 
   final Widget Function(BuildContext, T, int) itemBuilder;
   final Widget Function(BuildContext)? emptyListBuilder;
   final PagingController<int, T> pagingController;
+  final bool shrinkWrap;
   @override
   State<LitPagedListView<T>> createState() => _LitPagedListViewState<T>();
 }
@@ -33,6 +35,7 @@ class _LitPagedListViewState<T> extends State<LitPagedListView<T>> {
             children: [
               Expanded(
                 child: CustomScrollView(
+                  shrinkWrap: widget.shrinkWrap,
                   slivers: [
                     PagingListener(
                       controller: widget.pagingController,

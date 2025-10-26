@@ -10,6 +10,8 @@ class LitSearchBar extends StatelessWidget {
     this.litSearchController,
     this.onChanged,
     this.margin = 10,
+    this.labelText = 'Search',
+    this.prefixIcon = Icons.search,
   });
   final GlobalKey<FormState> formKey;
   // final String? initialValue;
@@ -18,6 +20,8 @@ class LitSearchBar extends StatelessWidget {
 
   final void Function()? onChanged;
   final double margin;
+  final String? labelText;
+  final IconData? prefixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +58,9 @@ class LitSearchBar extends StatelessWidget {
                   }
                 },
                 decoration: InputDecoration(
-                  labelText: 'Search',
+                  labelText: labelText,
                   border: InputBorder.none,
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon: Icon(prefixIcon),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.clear),
                     onPressed: () {

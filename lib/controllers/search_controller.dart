@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lit_reader/data/categories.dart';
 import 'package:lit_reader/env/consts.dart';
 import 'package:lit_reader/env/global.dart';
+import 'package:lit_reader/models/author.dart';
 import 'package:lit_reader/models/category_search_result.dart';
 import 'package:lit_reader/models/search_result.dart';
+import 'package:lit_reader/models/search_result_members.dart';
 import 'package:lit_reader/models/submission.dart';
 import 'package:logging/logging.dart';
 
@@ -20,8 +23,17 @@ class SearchController extends GetxController {
   final _isWinner = false.obs;
   final _isEditorsChoice = false.obs;
   final _searchResults = <Submission>[].obs;
+  final _memberResults = <Author>[].obs;
   final _tagList = <String>[].obs;
   final _categorySearch = false.obs;
+
+  final _searchAuthors = ''.obs;
+  String get searchAuthors => _searchAuthors.value;
+  set searchAuthors(String value) => _searchAuthors.value = value;
+
+  final _memberGenders = <AuthorGender>[].obs;
+  List<AuthorGender> get memberGenders => _memberGenders;
+  set memberGenders(List<AuthorGender> value) => _memberGenders.value = value;
 
   final _sortOrder = SearchSortField.relevant.obs;
   final RxnString _sortString = RxnString(null);
@@ -65,6 +77,9 @@ class SearchController extends GetxController {
   List<Submission> get searchResults => _searchResults;
   set searchResults(List<Submission> value) => _searchResults.value = value;
 
+  List<Author> get memberResults => _memberResults;
+  set memberResults(List<Author> value) => _memberResults.value = value;
+
   List<String> get tagList => _tagList;
   set tagList(List<String> value) => _tagList.value = value;
   RxInterface get tagListRx => _tagList;
@@ -89,6 +104,43 @@ class SearchController extends GetxController {
   List<Category> get categories => _categories;
   set categories(List<Category> value) => _categories.value = value;
   RxInterface get categoriesRx => _categories;
+
+  ///////////////////////UI index
+  final _selectedIndex = 0.obs;
+  final _selectedTabName = 'Search'.obs;
+  final _selectedTabIcon = const Icon(
+    Icons.search,
+    color: Colors.white,
+  ).obs;
+
+  int get selectedIndex => _selectedIndex.value;
+  set selectedIndex(int value) => _selectedIndex.value = value;
+
+  String get selectedTabName => _selectedTabName.value;
+  set selectedTabName(String value) => _selectedTabName.value = value;
+
+  Icon get selectedTabIcon => _selectedTabIcon.value;
+  set selectedTabIcon(Icon value) => _selectedTabIcon.value = value;
+
+  void togglePageIndex() {
+    if (selectedIndex == 0) {
+      selectedIndex = 1;
+      selectedTabIcon = const Icon(
+        Icons.person,
+        color: Colors.white,
+      );
+      selectedTabName = "Search Authors";
+    } else {
+      selectedIndex = 0;
+      selectedTabIcon = const Icon(
+        Icons.search,
+        color: Colors.white,
+      );
+      selectedTabName = "Search Stories";
+    }
+  }
+
+  ///
 
   Future<void> getCategories() async {
     List<Category> fetchedCategories = await api.getCategories();
@@ -156,7 +208,8 @@ class SearchController extends GetxController {
           isPopular: isPopular,
           isWinner: isWinner,
           isEditorsChoice: isEditorsChoice,
-          sortOrder: sortString);
+          sortOrder: sortString,
+          author: searchAuthors);
       if (page == 1 && result.meta != null) {
         maxPage = (result.meta!.total / (result.meta!.pageSize)).ceil();
       }
@@ -167,5 +220,22 @@ class SearchController extends GetxController {
       _logger.info('page: $page');
       _logger.info('maxPage: $maxPage');
     }
+  }
+
+  Future<void> searchMembers() async {
+    if (searchTerm.isEmpty || searchTerm.length < 3) {
+      return;
+    }
+    SearchResultMembers result =
+        await api.beginAuthorSearch(searchTerm, genders: memberGenders, page: page, sortOrder: sortString);
+    if (page == 1 && result.meta != null) {
+      maxPage = (result.meta!.total / (result.meta!.pageSize)).ceil();
+    }
+
+    List<Author> results = result.data;
+    memberResults = results;
+
+    _logger.info('page: $page');
+    _logger.info('maxPage: $maxPage');
   }
 }
