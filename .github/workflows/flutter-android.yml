@@ -87,7 +87,7 @@ jobs:
             echo "Error: keyAlias is not set correctly in key.properties"
             exit 1
           fi
-          if ! grep -q "storeFile=app/keystore.jks" android/key.properties; then
+          if ! grep -q "storeFile=keystore.jks" android/key.properties; then
             echo "Error: storeFile is not set correctly in key.properties"
             exit 1
           fi
