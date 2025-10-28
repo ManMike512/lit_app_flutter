@@ -43,15 +43,15 @@ jobs:
 
       - name: Verify Keystore Password
         run: |
-          keytool -list -keystore android/app/keystore.jks -storepass '${{ secrets.KEYSTORE_PASSWORD }}' -alias "${{ secrets.KEY_ALIAS }}"
+          keytool -list -keystore android/app/keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}"
         shell: bash
 
       - name: Create key.properties
         run: |
-          printf "storePassword=%s\n" "${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
-          printf "keyPassword=%s\n" "${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          printf "keyAlias=%s\n" "${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          printf "storeFile=keystore.jks\n" >> android/key.properties
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=keystore.jks" >> android/key.properties
 
       - name: Build APK
         env:
