@@ -41,8 +41,8 @@ class _LitMultiCategoriesState extends State<LitMultiCategories> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Categories"),
-        const SizedBox(height: 20),
+        const Text("Categories", style: TextStyle(fontSize: 18)),
+        const SizedBox(height: 10),
         MultiDropdown<Category>(
           // showClearIcon: false,
           controller: _controller,

@@ -11,6 +11,7 @@ import 'package:lit_reader/controllers/lists_controller.dart';
 import 'package:lit_reader/controllers/log_controller.dart';
 import 'package:lit_reader/controllers/login_controller.dart';
 import 'package:lit_reader/controllers/search_controller.dart' as searchController;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,6 +47,13 @@ void navigateToSearch(SearchConfig searchConfig) {
   litSearchController.isEditorsChoice = searchConfig.isEditorsChoice;
 
   persistentTabcontroller.jumpToTab(2);
+}
+
+String versionString = '1.0.0';
+
+Future<void> getAppVersion() async {
+  final packageInfo = await PackageInfo.fromPlatform();
+  versionString = packageInfo.version; // Version name
 }
 
 //controllers

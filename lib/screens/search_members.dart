@@ -11,6 +11,7 @@ import 'package:lit_reader/screens/widgets/drawer_widget.dart';
 import 'package:lit_reader/screens/widgets/empty_list_indicator.dart';
 import 'package:lit_reader/screens/widgets/lit_search_bar.dart';
 import 'package:lit_reader/screens/widgets/paged_list_view.dart';
+import 'package:moon_design/moon_design.dart';
 
 class SearchMembersScreen extends StatefulWidget {
   const SearchMembersScreen({super.key, this.searchConfig, this.pagingController});
@@ -103,7 +104,6 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
   @override
   Widget build(BuildContext context) {
     final searchformKey = GlobalKey<FormState>();
-    final filtersformKey = GlobalKey<FormState>();
 
     return Scaffold(
       drawer: searchConfig == null ? const DrawerWidget() : null,
@@ -129,7 +129,7 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
           IconButton(
             icon: const Icon(Ionicons.filter),
             onPressed: () {
-              filterFormDialog(context, filtersformKey);
+              filterFormDialog(context);
             },
           ),
         ],
@@ -160,15 +160,28 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
     );
   }
 
-  Future<dynamic> filterFormDialog(BuildContext context, GlobalKey<FormState> formKey) {
-    return showDialog(
+  Future<dynamic> filterFormDialog(BuildContext context) {
+    return showMoonModalBottomSheet(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      height: MediaQuery.of(context).size.height * 0.75,
       context: context,
       builder: (context) {
-        return SingleChildScrollView(
-          child: AlertDialog(
-            title: const Text('Filter'),
-            content: searchFilter(formKey),
-            actions: <Widget>[
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              Container(
+                height: 4,
+                width: 40,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              Text("Filters", style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 20),
+              Expanded(child: SingleChildScrollView(child: searchFilter())),
               TextButton(
                 child: const Text('Close'),
                 onPressed: () {
@@ -184,53 +197,56 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
     );
   }
 
-  Widget searchFilter(GlobalKey<FormState> formKey) {
+  Widget searchFilter() {
     return Obx(
-      () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          const Text("Sort"),
-          const SizedBox(height: 20),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.relevant,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.relevant;
-            },
-            child: const Text("Relevancy"),
-          ),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.dateAsc,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.dateDesc;
-            },
-            child: const Text("Newest"),
-          ),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.dateDesc,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.dateAsc;
-            },
-            child: const Text("Oldest"),
-          ),
-          const SizedBox(height: 20),
-          const Text("Gender"),
-          ...AuthorGender.values.map((g) => CheckboxMenuButton(
-                value: litSearchController.memberGenders.contains(g),
-                onChanged: (bool? value) {
-                  litSearchController.memberGenders.contains(g)
-                      ? litSearchController.memberGenders.remove(g)
-                      : litSearchController.memberGenders.add(g);
-                },
-                child: Text(g.text),
-              )),
-        ],
+      () => Material(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            const Text("Sort", style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 10),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.relevant,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.relevant;
+              },
+              child: const Text("Relevancy"),
+            ),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.dateAsc,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.dateDesc;
+              },
+              child: const Text("Newest"),
+            ),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.dateDesc,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.dateAsc;
+              },
+              child: const Text("Oldest"),
+            ),
+            const SizedBox(height: 20),
+            const Text("Gender", style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 10),
+            ...AuthorGender.values.map((g) => CheckboxMenuButton(
+                  value: litSearchController.memberGenders.contains(g),
+                  onChanged: (bool? value) {
+                    litSearchController.memberGenders.contains(g)
+                        ? litSearchController.memberGenders.remove(g)
+                        : litSearchController.memberGenders.add(g);
+                  },
+                  child: Text(g.text),
+                )),
+          ],
+        ),
       ),
     );
   }

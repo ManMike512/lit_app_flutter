@@ -217,6 +217,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.15.6"
+  http:
+    dependency: transitive
+    description:
+      name: http
+      sha256: bb2ce4590bc2667c96f318d68cac1b5a7987ec819351d32b1c987239a815e007
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   http_parser:
     dependency: transitive
     description:
@@ -337,6 +345,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.16.0"
+  moon_design:
+    dependency: "direct main"
+    description:
+      name: moon_design
+      sha256: "140c2b2956935464c7260eefc65d30fa6062569fb2f8c2fb2f891638a9581fd5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  moon_icons:
+    dependency: transitive
+    description:
+      name: moon_icons
+      sha256: "843ad808944000c8668fef9d8c7bb0340cacfa853a63175973fa08db33bbbc8b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  moon_tokens:
+    dependency: transitive
+    description:
+      name: moon_tokens
+      sha256: "5ad3d6ed3204b05b0020af1e578b91cbf7aa6f654d3c1d5a5c14b4fa29c30f18"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.6"
   multi_dropdown:
     dependency: "direct main"
     description:
@@ -353,6 +385,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  package_info_plus:
+    dependency: "direct main"
+    description:
+      name: package_info_plus
+      sha256: f69da0d3189a4b4ceaeb1a3defb0f329b3b352517f52bed4290f83d4f06bc08d
+      url: "https://pub.dev"
+    source: hosted
+    version: "9.0.0"
+  package_info_plus_platform_interface:
+    dependency: transitive
+    description:
+      name: package_info_plus_platform_interface
+      sha256: "202a487f08836a592a6bd4f901ac69b3a8f146af552bbd14407b6b41e1c3f086"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.1"
   page_view_dot_indicator:
     dependency: "direct main"
     description:
@@ -461,10 +509,10 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: "20cbd561f743a342c76c151d6ddb93a9ce6005751e7aa458baad3858bfbfb6ac"
+      sha256: bd14436108211b0d4ee5038689a56d4ae3620fd72fd6036e113bf1345bc74d9e
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.10"
+    version: "2.4.13"
   shared_preferences_foundation:
     dependency: transitive
     description:
@@ -726,6 +774,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
+  win32:
+    dependency: transitive
+    description:
+      name: win32
+      sha256: d7cb55e04cd34096cd3a79b3330245f54cb96a370a1c27adb3c84b917de8b08e
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.15.0"
   xdg_directories:
     dependency: transitive
     description:
@@ -736,4 +792,4 @@ packages:
     version: "1.1.0"
 sdks:
   dart: ">=3.8.0 <4.0.0"
-  flutter: ">=3.27.0"
+  flutter: ">=3.29.0"

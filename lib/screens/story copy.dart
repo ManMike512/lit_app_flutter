@@ -4,6 +4,7 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:lit_reader/classes/db_helper.dart';
 import 'package:lit_reader/env/colors.dart';
+import 'package:lit_reader/env/consts.dart';
 import 'package:lit_reader/env/global.dart';
 import 'package:lit_reader/models/page.dart';
 import 'package:lit_reader/models/read_history.dart';
@@ -12,6 +13,7 @@ import 'package:lit_reader/models/story_download.dart';
 import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/screens/story_details.dart';
 import 'package:lit_reader/screens/widgets/bookmarks_popup_menu.dart';
+import 'package:moon_design/moon_design.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class StoryScreen extends StatefulWidget {
@@ -56,10 +58,14 @@ class _StoryScreenState extends State<StoryScreen> {
         });
       });
     }
-    existingLists = await api.getListsWithStory((widget.submission).id.toString());
+    await updateLists();
     _fetchPagesFuture = fetchPages(psubmission: submission).then((value) => setState(() {
           isBusy = false;
         }));
+  }
+
+  Future<void> updateLists() async {
+    existingLists = await api.getListsWithStory((widget.submission).id.toString());
   }
 
   Future<void> fetchPages({Submission? psubmission}) async {
@@ -184,9 +190,9 @@ class _StoryScreenState extends State<StoryScreen> {
                   body(),
                   // slider(),
                   SizedBox(
-                    height: kToolbarHeight + 20,
+                    height: kToolbarHeight + 30,
                     child: AnimatedOpacity(
-                      opacity: isFabVisible ? 0.98 : 0.0, // Control the opacity with your condition
+                      opacity: isFabVisible ? 0.99 : 0.0, // Control the opacity with your condition
                       duration: const Duration(milliseconds: 10), // Control the duration of the animation
                       curve: Curves.easeInOut,
                       child: AppBar(
@@ -205,13 +211,45 @@ class _StoryScreenState extends State<StoryScreen> {
                           ),
                         ),
                         actions: [
+                          if (loginController.loginState == LoginState.loggedIn)
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () async {
+                                await showMoonModalBottomSheet(
+                                  enableDrag: true,
+                                  height: MediaQuery.of(context).size.height * 0.75,
+                                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return BookmarksPopupMenu(
+                                        submission: widget.submission,
+                                        existingLists: existingLists,
+                                        onUpdateLists: updateExistingLists,
+                                        context: context);
+                                  },
+                                );
+                              },
+                              icon: existingLists.isEmpty
+                                  ? const Icon(
+                                      Icons.bookmark_border,
+                                    )
+                                  : const Icon(
+                                      Icons.bookmark,
+                                      color: kRed,
+                                    ),
+                            ),
                           IconButton(
                             visualDensity: VisualDensity.compact,
                             onPressed: () {
-                              knavigatorKey.currentState!.push(MaterialPageRoute(
-                                  builder: (context) => StoryDetailsScreen(
-                                        submission: submission,
-                                      )));
+                              knavigatorKey.currentState!
+                                  .push(MaterialPageRoute(
+                                      builder: (context) => StoryDetailsScreen(
+                                            submission: submission,
+                                          )))
+                                  .then((value) async {
+                                await updateLists();
+                                setState(() {});
+                              });
                             },
                             icon: const Icon(Icons.info),
                           ),
@@ -228,29 +266,33 @@ class _StoryScreenState extends State<StoryScreen> {
                   visible: isFabVisible,
                   animatedIcon: AnimatedIcons.menu_close,
                   children: [
-                    SpeedDialChild(
-                      child: existingLists.isEmpty
-                          ? const Icon(
-                              Icons.bookmark_border,
-                            )
-                          : const Icon(
-                              Icons.bookmark,
-                              color: kRed,
-                            ),
-                      label: 'Bookmark',
-                      onTap: () async {
-                        await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return BookmarksPopupMenu(
-                                submission: widget.submission,
-                                existingLists: existingLists,
-                                onUpdateLists: updateExistingLists,
-                                context: context);
-                          },
-                        );
-                      },
-                    ),
+                    if (loginController.loginState == LoginState.loggedIn)
+                      SpeedDialChild(
+                        child: existingLists.isEmpty
+                            ? const Icon(
+                                Icons.bookmark_border,
+                              )
+                            : const Icon(
+                                Icons.bookmark,
+                                color: kRed,
+                              ),
+                        label: 'Bookmark',
+                        onTap: () async {
+                          await showMoonModalBottomSheet(
+                            enableDrag: true,
+                            height: MediaQuery.of(context).size.height * 0.75,
+                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BookmarksPopupMenu(
+                                  submission: widget.submission,
+                                  existingLists: existingLists,
+                                  onUpdateLists: updateExistingLists,
+                                  context: context);
+                            },
+                          );
+                        },
+                      ),
                     SpeedDialChild(
                       child: Icon(
                         Icons.file_download_outlined,

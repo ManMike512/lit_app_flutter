@@ -13,6 +13,7 @@ import 'package:lit_reader/screens/widgets/lit_search_bar.dart';
 import 'package:lit_reader/screens/widgets/lit_search_tag_bar.dart';
 import 'package:lit_reader/screens/widgets/paged_list_view.dart';
 import 'package:lit_reader/screens/widgets/story_item.dart';
+import 'package:moon_design/moon_design.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key, this.searchConfig, this.pagingController});
@@ -202,15 +203,57 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  //  Future<dynamic> bottomSheetBuilder(BuildContext context) {
+  //     return showMoonModalBottomSheet(
+  //       context: context,
+  //       enableDrag: true,
+  //       height: MediaQuery.of(context).size.height * 0.7,
+  //       builder: (BuildContext context) => Column(
+  //         children: [
+  //           // Drag handle for the bottom sheet.
+  //           Container(
+  //             height: 4,
+  //             width: 40,
+  //             margin: const EdgeInsets.symmetric(vertical: 8),
+  //             decoration: ShapeDecoration(
+  //               color: context.moonColors!.beerus,
+  //               shape: MoonSquircleBorder(
+  //                 borderRadius: BorderRadius.circular(16).squircleBorderRadius(context),
+  //               ),
+  //             ),
+  //           ),
+  //           const Expanded(
+  //             child: Align(
+  //               child: Text('MoonBottomSheet example'),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //  }
+
   Future<dynamic> filterFormDialog(BuildContext context) {
-    return showDialog(
+    return showMoonModalBottomSheet(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      height: MediaQuery.of(context).size.height * 0.75,
       context: context,
       builder: (context) {
-        return SingleChildScrollView(
-          child: AlertDialog(
-            title: const Text('Filter'),
-            content: searchFilter(),
-            actions: <Widget>[
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: [
+              Container(
+                height: 4,
+                width: 40,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              Text("Filters", style: Theme.of(context).textTheme.headlineMedium),
+              const SizedBox(height: 20),
+              Expanded(child: SingleChildScrollView(child: searchFilter())),
               TextButton(
                 child: const Text('Close'),
                 onPressed: () {
@@ -229,106 +272,108 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget searchFilter() {
     TextEditingController searchFieldTextController = TextEditingController(text: litSearchController.searchAuthors);
     return Obx(
-      () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: <Widget>[
-          LitSearchBar(
-            margin: 0,
-            prefixIcon: Ionicons.person,
-            labelText: "Author",
-            formKey: filtersformKey,
-            onChanged: () {
-              litSearchController.searchAuthors = searchFieldTextController.text;
-            },
-            searchFieldTextController: searchFieldTextController,
-          ),
-          CheckboxListTile(
-            title: const Text("Search Tags (Commas)"),
-            value: litSearchController.searchTags,
-            contentPadding: EdgeInsets.zero,
-            onChanged: (bool? value) {
-              setState(() {
-                if (value == null) {
-                  return;
-                }
-                litSearchController.searchTags = value;
-              });
-            },
-          ),
-          const SizedBox(height: 10),
-          const Text("Sort"),
-          const SizedBox(height: 20),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.relevant,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.relevant;
-            },
-            child: const Text("Relevancy"),
-          ),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.dateAsc,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.dateDesc;
-            },
-            child: const Text("Newest"),
-          ),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.dateDesc,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.dateAsc;
-            },
-            child: const Text("Oldest"),
-          ),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.voteDesc,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.voteDesc;
-            },
-            child: const Text("Rating"),
-          ),
-          RadioMenuButton<SearchSortField>(
-            value: SearchSortField.commentsDesc,
-            groupValue: litSearchController.sortOrder,
-            onChanged: (value) {
-              litSearchController.sortOrder = value!;
-              litSearchController.sortString = SearchString.commentsDesc;
-            },
-            child: const Text("Number of Comments"),
-          ),
-          const SizedBox(height: 20),
-          LitMultiCategories(searchController: litSearchController),
-          const SizedBox(height: 20),
-          CheckboxMenuButton(
-            value: litSearchController.isPopular,
-            onChanged: (bool? value) {
-              litSearchController.isPopular = value!;
-            },
-            child: const Text("Popular"),
-          ),
-          CheckboxMenuButton(
-            value: litSearchController.isWinner,
-            onChanged: (bool? value) {
-              litSearchController.isWinner = value!;
-            },
-            child: const Text("Contest Winner"),
-          ),
-          CheckboxMenuButton(
-            value: litSearchController.isEditorsChoice,
-            onChanged: (bool? value) {
-              litSearchController.isEditorsChoice = value!;
-            },
-            child: const Text("Editors Choice"),
-          ),
-        ],
+      () => Material(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            LitSearchBar(
+              margin: 0,
+              prefixIcon: Ionicons.person,
+              labelText: "Author",
+              formKey: filtersformKey,
+              onChanged: () {
+                litSearchController.searchAuthors = searchFieldTextController.text;
+              },
+              searchFieldTextController: searchFieldTextController,
+            ),
+            CheckboxListTile(
+              title: const Text("Search Tags (Commas)"),
+              value: litSearchController.searchTags,
+              contentPadding: EdgeInsets.zero,
+              onChanged: (bool? value) {
+                setState(() {
+                  if (value == null) {
+                    return;
+                  }
+                  litSearchController.searchTags = value;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
+            const Text("Sort", style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 10),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.relevant,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.relevant;
+              },
+              child: const Text("Relevancy"),
+            ),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.dateAsc,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.dateDesc;
+              },
+              child: const Text("Newest"),
+            ),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.dateDesc,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.dateAsc;
+              },
+              child: const Text("Oldest"),
+            ),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.voteDesc,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.voteDesc;
+              },
+              child: const Text("Rating"),
+            ),
+            RadioMenuButton<SearchSortField>(
+              value: SearchSortField.commentsDesc,
+              groupValue: litSearchController.sortOrder,
+              onChanged: (value) {
+                litSearchController.sortOrder = value!;
+                litSearchController.sortString = SearchString.commentsDesc;
+              },
+              child: const Text("Number of Comments"),
+            ),
+            const SizedBox(height: 20),
+            LitMultiCategories(searchController: litSearchController),
+            const SizedBox(height: 20),
+            CheckboxMenuButton(
+              value: litSearchController.isPopular,
+              onChanged: (bool? value) {
+                litSearchController.isPopular = value!;
+              },
+              child: const Text("Popular"),
+            ),
+            CheckboxMenuButton(
+              value: litSearchController.isWinner,
+              onChanged: (bool? value) {
+                litSearchController.isWinner = value!;
+              },
+              child: const Text("Contest Winner"),
+            ),
+            CheckboxMenuButton(
+              value: litSearchController.isEditorsChoice,
+              onChanged: (bool? value) {
+                litSearchController.isEditorsChoice = value!;
+              },
+              child: const Text("Editors Choice"),
+            ),
+          ],
+        ),
       ),
     );
   }

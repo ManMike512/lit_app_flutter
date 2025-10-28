@@ -22,6 +22,7 @@ Future<void> main() async {
   });
   WidgetsFlutterBinding.ensureInitialized();
   await initSharedPreferences();
+  await getAppVersion();
   _initServices();
 
   runApp(const OverlaySupport(child: MyApp()));

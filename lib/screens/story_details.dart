@@ -13,6 +13,7 @@ import 'package:lit_reader/screens/similar.dart';
 import 'package:lit_reader/screens/widgets/bookmarks_popup_menu.dart';
 import 'package:lit_reader/screens/widgets/lit_badge.dart';
 import 'package:lit_reader/screens/widgets/lit_tags.dart';
+import 'package:moon_design/moon_design.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class StoryDetailsScreen extends StatefulWidget {
@@ -79,8 +80,11 @@ class _StoryDetailsScreenState extends State<StoryDetailsScreen> {
         actions: [
           if (loginController.loginState == LoginState.loggedIn)
             IconButton(
-              onPressed: () {
-                showDialog(
+              onPressed: () async {
+                await showMoonModalBottomSheet(
+                  enableDrag: true,
+                  height: MediaQuery.of(context).size.height * 0.75,
+                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                   context: context,
                   builder: (BuildContext context) {
                     return BookmarksPopupMenu(

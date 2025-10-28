@@ -33,17 +33,23 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
   Widget build(context) {
     // late PageController controller;
     // ScrollController scrollController = ScrollController();
-
-    return AlertDialog(
-      title: const Text('Bookmarks'),
-      content: Column(children: [...favoriteitems.map((listitem) => favoriteItem(listitem, context))]),
-      actions: <Widget>[
-        TextButton(
-          child: const Text('Close'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          height: 4,
+          width: 40,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: Theme.of(context).dividerColor,
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
+        Text("Lists", style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 20),
+        SingleChildScrollView(
+            child: Expanded(
+                child: Material(child: Column(children: [...favoriteitems.map((listitem) => favoriteItem(listitem, context))])))),
       ],
     );
   }
@@ -68,7 +74,10 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
   Widget favoriteItem(FavoriteListItem listitem, BuildContext context) {
     return InkWell(
       onTap: () async {
-        api.toggleListItem(widget.submission.id, listitem.list.id, !listitem.inList);
+        bool success = await api.toggleListItem(widget.submission.id, listitem.list.id, !listitem.inList);
+        if (!success) {
+          return;
+        }
         int index = favoriteitems.indexOf(listitem);
 
         FavoriteListItem updatedItem = FavoriteListItem(
@@ -93,7 +102,7 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
       },
       borderRadius: BorderRadius.circular(5),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 15),
         child: Row(
           children: [
             listitem.inList
@@ -101,8 +110,11 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
                     Icons.bookmark,
                     color: kRed,
                   )
-                : const Icon(Icons.bookmark_border),
-            Text(listitem.list.title),
+                : const Icon(
+                    Icons.bookmark_border,
+                    color: Colors.white,
+                  ),
+            Text(listitem.list.title, style: Theme.of(context).textTheme.bodyLarge),
           ],
         ),
       ),
