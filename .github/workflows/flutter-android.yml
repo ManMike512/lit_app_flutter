@@ -50,7 +50,7 @@ jobs:
           storePassword: ${{ secrets.KEYSTORE_PASSWORD }}
           keyAlias: ${{ secrets.KEY_ALIAS }}
           keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --verbose --split-per-abi
 
       - name: Extract version from pubspec.yaml
         id: extract_version
