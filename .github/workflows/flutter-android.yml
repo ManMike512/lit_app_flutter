@@ -93,6 +93,10 @@ jobs:
           fi
 
       - name: Build APK
+        env:
+          storePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias: ${{ secrets.KEY_ALIAS }}
+          keyPassword: ${{ secrets.KEYSTORE_PASSWORD }}
         run: flutter build apk --release --split-per-abi
 
       - name: Extract version from pubspec.yaml
