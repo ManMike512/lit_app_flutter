@@ -43,7 +43,7 @@ jobs:
 
       - name: Verify Keystore Password
         run: |
-          keytool -list -keystore android/app/keystore.jks -storepass "${{ secrets.KEYSTORE_PASSWORD }}" -alias "${{ secrets.KEY_ALIAS }}"
+          keytool -list -keystore android/app/keystore.jks -storepass '${{ secrets.KEYSTORE_PASSWORD }}'' -alias "${{ secrets.KEY_ALIAS }}"
         shell: bash
 
       - name: Create key.properties
