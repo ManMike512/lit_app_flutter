@@ -38,7 +38,7 @@ dependencies:
   infinite_scroll_pagination: ^5.1.0
   sqflite: ^2.3.0
   path: ^1.8.3
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.5.3
   jwt_decoder: ^2.0.1
   page_view_dot_indicator: ^2.3.0
   smooth_page_indicator: ^1.1.0
