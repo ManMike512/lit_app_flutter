@@ -33,24 +33,26 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
   Widget build(context) {
     // late PageController controller;
     // ScrollController scrollController = ScrollController();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 4,
-          width: 40,
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).dividerColor,
-            borderRadius: BorderRadius.circular(16),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            height: 4,
+            width: 40,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).dividerColor,
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
-        ),
-        Text("Lists", style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 20),
-        SingleChildScrollView(
-            child: Expanded(
-                child: Material(child: Column(children: [...favoriteitems.map((listitem) => favoriteItem(listitem, context))])))),
-      ],
+          Text("Lists", style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 20),
+          SingleChildScrollView(
+              child: Material(child: Column(children: [...favoriteitems.map((listitem) => favoriteItem(listitem, context))]))),
+        ],
+      ),
     );
   }
 
