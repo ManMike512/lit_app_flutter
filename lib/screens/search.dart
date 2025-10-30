@@ -270,7 +270,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget searchFilter() {
-    TextEditingController searchFieldTextController = TextEditingController(text: litSearchController.searchAuthors);
+    TextEditingController authorSearchFieldTextController = TextEditingController(text: litSearchController.searchAuthors);
     return Obx(
       () => Material(
         child: Column(
@@ -283,9 +283,9 @@ class _SearchScreenState extends State<SearchScreen> {
               labelText: "Author",
               formKey: filtersformKey,
               onChanged: () {
-                litSearchController.searchAuthors = searchFieldTextController.text;
+                litSearchController.searchAuthors = authorSearchFieldTextController.text;
               },
-              searchFieldTextController: searchFieldTextController,
+              searchFieldTextController: authorSearchFieldTextController,
             ),
             CheckboxListTile(
               title: const Text("Search Tags (Commas)"),

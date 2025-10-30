@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
@@ -62,6 +64,24 @@ class _StoryScreenState extends State<StoryScreen> {
     _fetchPagesFuture = fetchPages(psubmission: submission).then((value) => setState(() {
           isBusy = false;
         }));
+
+    // Use addPostFrameCallback to ensure the widget tree is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      waitForScrollControllerClients();
+    });
+  }
+
+  void waitForScrollControllerClients() {
+    Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (scrollController.hasClients) {
+        timer.cancel(); // Stop the timer once clients are attached
+        double lastPagePosition = prefsFunctions.getLastPagePosition(submission: submission);
+        print('jump to last page position: $lastPagePosition');
+        scrollController.jumpTo(lastPagePosition);
+      } else {
+        print('Waiting for ScrollController to have clients...');
+      }
+    });
   }
 
   Future<void> updateLists() async {
@@ -132,8 +152,13 @@ class _StoryScreenState extends State<StoryScreen> {
 
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     controller.removeListener(() => prefsFunctions.saveCurrentPage(submission: submission, controller: controller));
     controller.dispose();
+    scrollController
+        .removeListener(() => prefsFunctions.saveScrollPosition(submission: submission, scrollController: scrollController));
+
+    scrollController.dispose();
     super.dispose();
   }
 

@@ -28,10 +28,9 @@ class PrefsFunctions {
   void jumpToLastPage(
       {required Submission submission, required PageController controller, required ScrollController scrollController}) {
     int lastPage = getLastPage(submission: submission);
-    double lastPagePosition = getLastPagePosition(submission: submission);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       controller.jumpToPage(lastPage);
-      scrollController.jumpTo(lastPagePosition);
     });
   }
 

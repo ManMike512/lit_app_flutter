@@ -6,7 +6,7 @@ class LitSearchBar extends StatelessWidget {
     super.key,
     required this.formKey,
     // this.initialValue,
-    this.searchFieldTextController,
+    required this.searchFieldTextController,
     this.litSearchController,
     this.onChanged,
     this.margin = 10,
@@ -15,7 +15,7 @@ class LitSearchBar extends StatelessWidget {
   });
   final GlobalKey<FormState> formKey;
   // final String? initialValue;
-  final TextEditingController? searchFieldTextController;
+  final TextEditingController searchFieldTextController;
   final litController.SearchController? litSearchController;
 
   final void Function()? onChanged;
@@ -37,45 +37,43 @@ class LitSearchBar extends StatelessWidget {
             ),
             child: Padding(
               padding: const EdgeInsets.all(1.0),
-              child: TextFormField(
-                controller: searchFieldTextController,
-                // initialValue: initialValue, //searchController.searchTerm,
-                textInputAction: TextInputAction.search,
-                validator: (value) {
-                  if (value == null || value.isEmpty || value.length < 3) {
-                    return 'Please enter atleast 3 characters';
-                  }
-                  return null;
-                },
-                onChanged: onChanged != null
-                    ? (value) {
-                        onChanged!();
-                      }
-                    : null,
-                onFieldSubmitted: (value) {
-                  if (formKey.currentState!.validate() && litSearchController != null) {
-                    litSearchController!.searchTerm = value;
-                  }
-                },
-                decoration: InputDecoration(
-                  labelText: labelText,
-                  border: InputBorder.none,
-                  prefixIcon: Icon(prefixIcon),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      if (searchFieldTextController != null) {
-                        searchFieldTextController!.text = "";
-                        if (onChanged != null) {
-                          onChanged!();
-                        }
-                      } else if (litSearchController != null) {
-                        litSearchController!.searchTerm = "";
-                        formKey.currentState!.reset();
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: searchFieldTextController,
+                builder: (context, value, child) {
+                  print("ValueListenableBuilder triggered with value: '${value.text}'");
+                  return TextFormField(
+                    controller: searchFieldTextController,
+                    textInputAction: TextInputAction.search,
+                    onChanged: onChanged != null
+                        ? (value) {
+                            onChanged!();
+                          }
+                        : null,
+                    onFieldSubmitted: (value) {
+                      if (formKey.currentState!.validate() && litSearchController != null) {
+                        litSearchController!.searchTerm = value;
                       }
                     },
-                  ),
-                ),
+                    decoration: InputDecoration(
+                      labelText: labelText,
+                      border: InputBorder.none,
+                      prefixIcon: Icon(prefixIcon),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          if (litSearchController != null) {
+                            litSearchController!.searchTerm = "";
+                          }
+                          searchFieldTextController.clear();
+
+                          if (onChanged != null) {
+                            onChanged!();
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

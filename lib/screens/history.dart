@@ -48,6 +48,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       await dbHelper.init();
 
       final List<ReadHistory> newItems = await dbHelper.getHistory();
+      newItems.retainWhere((history) {
+        final searchTerm = searchController.text.toLowerCase();
+        final title = history.submission.title.toLowerCase();
+        final author = (history.submission.author?.username ?? '').toLowerCase();
+        return title.contains(searchTerm) || author.contains(searchTerm);
+      });
 
       return newItems;
     } catch (error) {
@@ -150,6 +156,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               itemBuilder: (context, item, index) {
                 return StoryItem(
                   submission: item.submission,
+                  onDelete: (submission) => onDeleteHistory(submission),
                 );
               },
               emptyListBuilder: (_) => const EmptyListIndicator(

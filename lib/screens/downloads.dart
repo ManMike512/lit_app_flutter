@@ -49,6 +49,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
       final List<StoryDownload> newItems = await dbHelper.getDownloads();
 
+      newItems.retainWhere((download) {
+        final searchTerm = searchController.text.toLowerCase();
+        final title = download.submission.title.toLowerCase();
+        final author = (download.submission.author?.username ?? '').toLowerCase();
+        return title.contains(searchTerm) || author.contains(searchTerm);
+      });
+
       return newItems;
     } catch (error) {
       rethrow;

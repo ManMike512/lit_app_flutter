@@ -199,9 +199,9 @@ class SearchController extends GetxController {
         return;
       }
     } else {
-      if (searchTerm.isEmpty || searchTerm.length < 3) {
-        return;
-      }
+      // if (searchTerm.isEmpty || searchTerm.length < 3) {
+      //   return;
+      // }
       SearchResult result = await api.beginSearch(searchTerm,
           page: page,
           categories: selectedCategory,

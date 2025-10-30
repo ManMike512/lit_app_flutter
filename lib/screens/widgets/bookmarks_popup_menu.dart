@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:lit_reader/env/colors.dart';
 import 'package:lit_reader/env/consts.dart';
 import 'package:lit_reader/env/global.dart';
@@ -33,27 +34,37 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
   Widget build(context) {
     // late PageController controller;
     // ScrollController scrollController = ScrollController();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            height: 4,
-            width: 40,
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).dividerColor,
-              borderRadius: BorderRadius.circular(16),
+    return Obx(() {
+      if (listController.isBusy) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 4,
+              width: 40,
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).dividerColor,
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
-          ),
-          Text("Lists", style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 20),
-          SingleChildScrollView(
-              child: Material(child: Column(children: [...favoriteitems.map((listitem) => favoriteItem(listitem, context))]))),
-        ],
-      ),
-    );
+            Text("Lists", style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 20),
+            if (favoriteitems.isEmpty) Text("No lists available", style: Theme.of(context).textTheme.bodyLarge),
+            if (favoriteitems.isNotEmpty)
+              SingleChildScrollView(
+                  child:
+                      Material(child: Column(children: [...favoriteitems.map((listitem) => favoriteItem(listitem, context))]))),
+          ],
+        ),
+      );
+    });
   }
 
   Future<void> fetchListData() async {
@@ -61,6 +72,9 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
       return;
     }
 
+    if (listController.list.isEmpty) {
+      listController.list = await api.getLists();
+    }
     List<Lists> lists = listController.list;
 
     setState(() {
