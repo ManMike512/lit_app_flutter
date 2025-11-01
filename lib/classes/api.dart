@@ -552,7 +552,9 @@ class API {
           },
         ),
       );
-      final List<Lists> lists = response.data.map<Lists>((list) => Lists.fromJson(list)).toList();
+      List<Lists> lists = response.data.map<Lists>((list) => Lists.fromJson(list)).toList();
+      List<String> excludedListTypes = ['poem', 'audio', 'illustra', 'sg'];
+      lists = lists.where((list) => !excludedListTypes.contains(list.submissionType)).toList();
 
       return lists;
     } catch (e) {
