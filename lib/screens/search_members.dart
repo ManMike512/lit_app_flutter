@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:ionicons/ionicons.dart';
 import 'package:lit_reader/classes/search_config.dart';
+import 'package:lit_reader/env/colors.dart';
 import 'package:lit_reader/env/consts.dart';
 import 'package:lit_reader/env/global.dart';
 import 'package:lit_reader/models/author.dart';
@@ -182,14 +183,6 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
               Text("Filters", style: Theme.of(context).textTheme.headlineMedium),
               const SizedBox(height: 20),
               Expanded(child: SingleChildScrollView(child: searchFilter())),
-              TextButton(
-                child: const Text('Close'),
-                onPressed: () {
-                  if (!mounted) return;
-                  _pagingController.refresh();
-                  Navigator.of(context).pop();
-                },
-              ),
             ],
           ),
         );
@@ -245,6 +238,29 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
                   },
                   child: Text(g.text),
                 )),
+            Padding(
+              padding: const EdgeInsets.only(top: 10.0, bottom: 20.0),
+              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kRed,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                      side: BorderSide(color: kRed),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (!mounted) return;
+                    _pagingController.refresh();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Apply Filters',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ]),
+            ),
           ],
         ),
       ),

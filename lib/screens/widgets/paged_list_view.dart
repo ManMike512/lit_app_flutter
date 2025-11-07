@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:lit_reader/env/colors.dart';
 
 class LitPagedListView<T> extends StatefulWidget {
   const LitPagedListView(
@@ -46,6 +47,22 @@ class _LitPagedListViewState<T> extends State<LitPagedListView<T>> {
                         builderDelegate: PagedChildBuilderDelegate<T>(
                           itemBuilder: widget.itemBuilder,
                           noItemsFoundIndicatorBuilder: widget.emptyListBuilder,
+                          firstPageProgressIndicatorBuilder: (context) => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: kRed,
+                              ),
+                            ),
+                          ),
+                          newPageProgressIndicatorBuilder: (context) => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: kRed,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),

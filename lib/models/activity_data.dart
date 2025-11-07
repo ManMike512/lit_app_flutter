@@ -20,7 +20,7 @@ class ActivityData {
 
   factory ActivityData.fromJson(Map<String, dynamic> json) {
     return ActivityData(
-      id: json['id'],
+      id: json['id'].toString(),
       action: json['action'],
       when: json['when'],
       who: Who.fromJson(json['who']),

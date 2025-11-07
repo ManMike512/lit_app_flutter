@@ -18,6 +18,7 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
+  bool viewOld = false;
   late final _pagingController = PagingController<int, ActivityData>(
     getNextPageKey: (state) => state.lastPageIsEmpty ? null : state.nextIntPageKey,
     fetchPage: (pageKey) async {
@@ -26,6 +27,12 @@ class _FeedScreenState extends State<FeedScreen> {
     },
   );
 
+  void switchFeedState() {
+    viewOld = !viewOld;
+    _pagingController.refresh();
+    setState(() {});
+  }
+
   String? lastId;
   Future<List<ActivityData>> _fetchPage(int pageKey) async {
     try {
@@ -33,7 +40,8 @@ class _FeedScreenState extends State<FeedScreen> {
         lastId = null;
       }
       int limit = 25;
-      final newItems = await api.getFeed(limit: limit, lastId: lastId);
+      final newItems =
+          viewOld ? await api.getOldFeed(limit: limit, lastId: lastId) : await api.getFeed(limit: limit, lastId: lastId);
 
       if (lastId == newItems.data.last.id) {
         //no new items
@@ -61,7 +69,15 @@ class _FeedScreenState extends State<FeedScreen> {
       appBar: AppBar(
         surfaceTintColor: Theme.of(context).scaffoldBackgroundColor,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: const Text('Feed'),
+        title: Text(viewOld ? 'Archived Feed' : 'Feed'),
+        actions: [
+          IconButton(
+            icon: Icon(viewOld ? Icons.new_releases_outlined : Icons.history),
+            onPressed: () {
+              switchFeedState();
+            },
+          ),
+        ],
       ),
       body: body(),
     );

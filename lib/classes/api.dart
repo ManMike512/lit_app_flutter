@@ -343,6 +343,51 @@ class API {
     } finally {}
   }
 
+  Future<ActivityWall> getOldFeed({int limit = 25, String? lastId}) async {
+    await loginController.isTokenValid();
+    if (loginController.loginState != LoginState.loggedIn) {
+      if (loginController.username.isNotEmpty && loginController.password.isNotEmpty) {
+        await loginController.login();
+      } else {
+        return ActivityWall(data: [], new_activity_count: 0);
+      }
+    }
+
+    try {
+      var url = '${apiUrl}activity/old/wall?params={"chunked":1,"limit":$limit';
+
+      if (lastId != null) {
+        url += ',"last_id":$lastId';
+      }
+      url += '}';
+
+      _logger.info('Called: $url');
+
+      final response = await dioController.dio.get(
+        url,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': loginController.token.token!,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final ActivityWall feed = ActivityWall.fromJson(response.data);
+
+        return feed;
+      }
+
+      return ActivityWall(data: [], new_activity_count: 0);
+    } catch (e) {
+      // ignore: avoid_print
+      print(e);
+      toast(e.toString());
+      return ActivityWall(data: [], new_activity_count: 0);
+    } finally {}
+  }
+
   Future<SearchResult> beginSearch(String searchTerm,
       {int page = 1,
       List<String> categories = const [],
