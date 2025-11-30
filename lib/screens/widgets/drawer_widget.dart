@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lit_reader/env/colors.dart';
 import 'package:lit_reader/env/global.dart';
+import 'package:lit_reader/screens/backup.dart';
 import 'package:lit_reader/screens/log_screen.dart';
 import 'package:lit_reader/screens/login.dart';
 
@@ -49,6 +50,16 @@ class DrawerWidget extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const LogScreen()),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.settings_backup_restore),
+                  title: const Text('Backup'),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const BackupScreen()),
                     );
                   },
                 ),

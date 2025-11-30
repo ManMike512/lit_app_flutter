@@ -49,4 +49,12 @@ class PrefsFunctions {
 
     return csvCategories;
   }
+
+  String? getStoragePath() {
+    return preferences.getString('storagePath');
+  }
+
+  Future<bool> saveStoragePath(String path) async {
+    return await preferences.setString('storagePath', path);
+  }
 }
