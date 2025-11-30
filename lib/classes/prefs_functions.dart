@@ -57,4 +57,53 @@ class PrefsFunctions {
   Future<bool> saveStoragePath(String path) async {
     return await preferences.setString('storagePath', path);
   }
+
+  Map<String, int> getAllPagePositions() {
+    final Map<String, int> result = {};
+    final keys = preferences.getKeys();
+    for (final key in keys) {
+      if (key.contains("_currentpage")) {
+        int? value = preferences.getInt(key);
+        if (value != null) {
+          result[key] = value;
+        }
+      }
+    }
+    return result;
+  }
+
+  Map<String, double> getAllScrollPositions() {
+    final Map<String, double> result = {};
+    final keys = preferences.getKeys();
+    for (final key in keys) {
+      if (key.contains("_scrollPosition")) {
+        double? value = preferences.getDouble(key);
+        if (value != null) {
+          result[key] = value;
+        }
+      }
+    }
+    return result;
+  }
+
+  Future<void> restoreCurrentPages({required Map<String, int> allPages}) async {
+    for (final entry in allPages.entries) {
+      try {
+        await preferences.setInt(entry.key, entry.value);
+      } catch (e) {
+        //ignore
+        print(e);
+      }
+    }
+  }
+
+  Future<void> restoreScrollPositions({required Map<String, double> allPositions}) async {
+    for (final entry in allPositions.entries) {
+      try {
+        await preferences.setDouble(entry.key, entry.value);
+      } catch (e) {
+        print(e);
+      }
+    }
+  }
 }

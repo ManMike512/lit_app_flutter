@@ -12,19 +12,29 @@ import 'package:permission_handler/permission_handler.dart';
 
 class BackupData {
   final List<ReadHistory> history;
-  final List<StoryDownload> downloads; // Replace dynamic with your StoryDownload model
-  BackupData({required this.history, required this.downloads});
+  final List<StoryDownload> downloads;
+  final Map<String, int> pagePositions;
+  final Map<String, double> scrollPositions;
+  BackupData({required this.history, required this.downloads, this.pagePositions = const {}, this.scrollPositions = const {}});
 
-  static BackupData copyWith(BackupData original, {List<ReadHistory>? history, List<StoryDownload>? downloads}) {
+  static BackupData copyWith(BackupData original,
+      {List<ReadHistory>? history,
+      List<StoryDownload>? downloads,
+      Map<String, int>? pagePositions,
+      Map<String, double>? scrollPositions}) {
     return BackupData(
       history: history ?? original.history,
       downloads: downloads ?? original.downloads,
+      pagePositions: pagePositions ?? original.pagePositions,
+      scrollPositions: scrollPositions ?? original.scrollPositions,
     );
   }
 
   Map<String, dynamic> toJson() => {
         'history': history.map((e) => e.toJson()).toList(),
         'downloads': downloads.map((e) => e.toJson()).toList(),
+        'pagePositions': jsonEncode(pagePositions),
+        'scrollPositions': jsonEncode(scrollPositions),
       };
 
   factory BackupData.fromJson(Map<String, dynamic> json) {
@@ -32,6 +42,10 @@ class BackupData {
       history: (json['history'] as List<dynamic>?)?.map((e) => ReadHistory.fromJson(e as Map<String, dynamic>)).toList() ?? [],
       downloads:
           (json['downloads'] as List<dynamic>?)?.map((e) => StoryDownload.fromJson(e as Map<String, dynamic>)).toList() ?? [],
+      pagePositions:
+          json['pagePositions'] != null ? Map<String, int>.from(jsonDecode(json['pagePositions'] as String) as Map) : {},
+      scrollPositions:
+          json['scrollPositions'] != null ? Map<String, double>.from(jsonDecode(json['scrollPositions'] as String) as Map) : {},
     );
   }
 }
@@ -79,7 +93,9 @@ class _BackupScreenState extends State<BackupScreen> {
       await dbHelper.init();
       final history = await dbHelper.getHistory();
       final downloads = await dbHelper.getDownloads();
-      return BackupData(history: history, downloads: downloads);
+      final pagePositions = prefsFunctions.getAllPagePositions();
+      final scrollPositions = prefsFunctions.getAllScrollPositions();
+      return BackupData(history: history, downloads: downloads, pagePositions: pagePositions, scrollPositions: scrollPositions);
     }
 
     Future<void> setDirectory() async {
@@ -89,6 +105,8 @@ class _BackupScreenState extends State<BackupScreen> {
       String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null) {
         await prefsFunctions.saveStoragePath(selectedDirectory);
+        storedPath = selectedDirectory;
+        setState(() {});
       }
     }
 
@@ -107,6 +125,8 @@ class _BackupScreenState extends State<BackupScreen> {
       for (var download in backupData.downloads) {
         await dbHelper.addDownload(download.url, download);
       }
+      await prefsFunctions.restoreCurrentPages(allPages: backupData.pagePositions);
+      await prefsFunctions.restoreScrollPositions(allPositions: backupData.scrollPositions);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Backup restored from ${file.path}')),
       );
