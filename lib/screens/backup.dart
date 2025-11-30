@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lit_reader/classes/db_helper.dart';
 import 'package:lit_reader/classes/prefs_functions.dart';
 import 'package:lit_reader/models/read_history.dart';
@@ -113,7 +114,9 @@ class _BackupScreenState extends State<BackupScreen> {
 
     Future<void> saveJsonFile(String jsonString) async {
       if (storedPath != null) {
-        final filePath = '$storedPath/lit_backup_${DateTime.now().millisecondsSinceEpoch}.json';
+        final now = DateTime.now();
+        final timestamp = DateFormat('dd_MMM_yyyy_HH_mm_ss').format(now);
+        final filePath = '$storedPath/lit_backup_$timestamp.json';
         final file = File(filePath);
         await file.writeAsString(jsonString, flush: true);
         ScaffoldMessenger.of(context).showSnackBar(

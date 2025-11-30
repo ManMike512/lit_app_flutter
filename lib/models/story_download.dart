@@ -27,7 +27,7 @@ class StoryDownload {
       'url': url,
       'submission': submission.toJson(),
       'pages': List<dynamic>.from(pages.map((x) => x.toJson())),
-      'lastReadDate': lastReadDate ?? DateTime.now().toLocal().toString(),
+      'lastReadDate': lastReadDate?.toLocal().toString() ?? DateTime.now().toLocal().toString(),
     };
   }
 }

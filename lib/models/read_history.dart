@@ -23,7 +23,7 @@ class ReadHistory {
     return {
       'url': url,
       'submission': submission.toJson(),
-      'lastReadDate': lastReadDate ?? DateTime.now().toLocal().toString(),
+      'lastReadDate': lastReadDate?.toLocal().toString() ?? DateTime.now().toLocal().toString(),
     };
   }
 }
