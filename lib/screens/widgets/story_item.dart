@@ -5,7 +5,7 @@ import 'package:lit_reader/env/colors.dart';
 import 'package:lit_reader/env/global.dart';
 import 'package:lit_reader/models/submission.dart';
 import 'package:lit_reader/screens/author.dart';
-import 'package:lit_reader/screens/story copy.dart';
+import 'package:lit_reader/screens/story.dart';
 import 'package:lit_reader/screens/story_details.dart';
 import 'package:lit_reader/screens/widgets/lit_badge.dart';
 import 'package:lit_reader/screens/widgets/lit_tags.dart';

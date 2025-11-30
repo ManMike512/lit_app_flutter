@@ -1,356 +1,473 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-// import 'package:lit_reader/classes/db_helper.dart';
-// import 'package:lit_reader/env/colors.dart';
-// import 'package:lit_reader/env/global.dart';
-// import 'package:lit_reader/models/page.dart';
-// import 'package:lit_reader/models/read_history.dart';
-// import 'package:lit_reader/models/story.dart';
-// import 'package:lit_reader/models/story_download.dart';
-// import 'package:lit_reader/models/submission.dart';
-// import 'package:lit_reader/screens/story_details.dart';
-// import 'package:lit_reader/screens/widgets/bookmarks_popup_menu.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:text_reader/reader_main.dart';
-// import 'package:text_reader/state/controller_state.dart';
+import 'dart:async';
 
-// class StoryScreen extends StatefulWidget {
-//   const StoryScreen({super.key, required this.submission});
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:lit_reader/classes/db_helper.dart';
+import 'package:lit_reader/env/colors.dart';
+import 'package:lit_reader/env/consts.dart';
+import 'package:lit_reader/env/global.dart';
+import 'package:lit_reader/models/page.dart';
+import 'package:lit_reader/models/read_history.dart';
+import 'package:lit_reader/models/story.dart';
+import 'package:lit_reader/models/story_download.dart';
+import 'package:lit_reader/models/submission.dart';
+import 'package:lit_reader/screens/story_details.dart';
+import 'package:lit_reader/screens/widgets/bookmarks_popup_menu.dart';
+import 'package:lit_reader/screens/widgets/font_settings_popup_menu.dart';
+import 'package:moon_design/moon_design.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-//   final Submission submission;
+class StoryScreen extends StatefulWidget {
+  const StoryScreen({super.key, required this.submission});
 
-//   @override
-//   State<StoryScreen> createState() => _StoryScreenState();
-// }
+  final Submission submission;
 
-// class _StoryScreenState extends State<StoryScreen> {
-//   late ControllerState controllerState;
-//   late Submission submission;
+  @override
+  State<StoryScreen> createState() => _StoryScreenState();
+}
 
-//   // late PageController controller;
-//   // ScrollController scrollController = ScrollController();
-//   late List<int> existingLists;
+class _StoryScreenState extends State<StoryScreen> {
+  late Submission submission;
 
-//   final List<StoryPage> pages = [];
-//   int initialPage = 0;
-//   int nextChapter = 0;
-//   bool hasNextChapter = false;
-//   bool isBusy = false;
-//   bool isFabVisible = true;
+  late PageController controller;
+  ScrollController scrollController = ScrollController();
 
-//   Future<void>? _fetchPagesFuture;
+  final List<StoryPage> pages = [];
+  int initialPage = 0;
+  int nextChapter = 0;
+  bool hasNextChapter = false;
+  bool isBusy = false;
+  bool isFabVisible = false;
+  List<int> existingLists = [];
 
-//   bool isDownloaded = false;
+  Future<void>? _fetchPagesFuture;
 
-//   void updateExistingLists(List<int> newLists) {
-//     setState(() {
-//       existingLists = newLists;
-//     });
-//   }
+  bool isDownloaded = false;
 
-//   setInitState({Submission? setSubmission}) async {
-//     initialPage = 0;
-//     nextChapter = 0;
-//     existingLists = [];
-//     hasNextChapter = false;
-//     pages.clear();
-//     submission = setSubmission ?? widget.submission;
-//     // await fetchListData(pSubmission: submission);
-//     _fetchPagesFuture = fetchPages(psubmission: submission).then((value) {
-//       setState(() {
-//         isBusy = false;
-//       });
-//       List<String> content = pages.map((page) => page.content).toList();
-//       // List<dynamic> lastPosition = await _FetchLastPositions();
+  Future<void> setInitState({Submission? setSubmission}) async {
+    controller = PageController();
+    scrollController = ScrollController();
+    initialPage = 0;
+    nextChapter = 0;
+    hasNextChapter = false;
+    pages.clear();
+    submission = setSubmission ?? widget.submission;
+    if (submission.author?.homepage == null) {
+      await api.getAuthor(submission.author!.userid).then((value) {
+        setState(() {
+          submission = submission.copyWithAuthor(author: value);
+        });
+      });
+    }
+    await updateLists();
+    _fetchPagesFuture = fetchPages(psubmission: submission).then((value) => setState(() {
+          isBusy = false;
+        }));
 
-//       _FetchLastPositions().then((value) {
-//         controllerState = ControllerState(contents: content, currentPageIndex: value[0], initialScrollPosition: value[1]);
-//       });
-//       // controllerState =
-//       //     ControllerState(contents: content, currentPageIndex: lastPosition[0], initialScrollPosition: lastPosition[1]);
-//     });
-//     // WidgetsBinding.instance.addPostFrameCallback((_) {
-//     //   _JumpToLastPage();
-//     // });
-//   }
+    // Use addPostFrameCallback to ensure the widget tree is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      waitForScrollControllerClients();
+    });
+  }
 
-//   Future<void> fetchPages({Submission? psubmission}) async {
-//     psubmission ??= submission;
-//     // controller.addListener(_saveCurrentPage);
-//     // scrollController.addListener(_saveScrollPosition);
+  void waitForScrollControllerClients() {
+    Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (scrollController.hasClients) {
+        timer.cancel(); // Stop the timer once clients are attached
+        double lastPagePosition = prefsFunctions.getLastPagePosition(submission: submission);
+        print('jump to last page position: $lastPagePosition');
+        scrollController.jumpTo(lastPagePosition);
+      } else {
+        print('Waiting for ScrollController to have clients...');
+      }
+    });
+  }
 
-//     DBHelper dbHelper = DBHelper();
-//     await dbHelper.init();
-//     List<StoryDownload> downloads = await dbHelper.getDownloads(psubmission.url);
-//     ReadHistory history = ReadHistory(
-//       url: psubmission.url,
-//       submission: psubmission,
-//     );
-//     await dbHelper.addHistory(psubmission.url, history);
-//     if (downloads.isNotEmpty) {
-//       StoryDownload download = downloads.first;
-//       // submission = widget.submission;
-//       setState(() {
-//         pages.addAll(download.pages);
-//         isDownloaded = true;
-//       });
-//       return;
-//     }
-//     List<Future<Story>> futures = [];
+  Future<void> updateLists() async {
+    existingLists = await api.getListsWithStory((widget.submission).id.toString());
+  }
 
-//     Story firstPageStory = await api.getStory(psubmission.url, page: 1);
-//     hasNextChapter = firstPageStory.submission.series.meta.order.isNotEmpty &&
-//         firstPageStory.submission.series.meta.order.lastOrNull != psubmission.id;
-//     int index = firstPageStory.submission.series.meta.order.indexWhere((c) => c == psubmission!.id);
-//     if (hasNextChapter) {
-//       nextChapter = firstPageStory.submission.series.meta.order[index + 1];
-//     }
-//     futures.add(Future.value(firstPageStory));
+  Future<void> fetchPages({Submission? psubmission}) async {
+    psubmission ??= submission;
+    controller.addListener(() => prefsFunctions.saveCurrentPage(submission: submission, controller: controller));
+    scrollController
+        .addListener(() => prefsFunctions.saveScrollPosition(submission: submission, scrollController: scrollController));
 
-//     for (int i = 2; i <= firstPageStory.meta.pagesCount; i++) {
-//       futures.add(api.getStory(psubmission.url, page: i));
-//     }
+    DBHelper dbHelper = DBHelper();
+    await dbHelper.init();
+    List<StoryDownload> downloads = await dbHelper.getDownloads(psubmission.url);
+    ReadHistory history = ReadHistory(
+      url: psubmission.url,
+      submission: psubmission,
+    );
+    await dbHelper.addHistory(psubmission.url, history);
+    if (downloads.isNotEmpty) {
+      StoryDownload download = downloads.first;
+      // submission = widget.submission;
+      setState(() {
+        pages.addAll(download.pages);
+        isDownloaded = true;
+      });
+      return;
+    }
+    List<Future<Story>> futures = [];
 
-//     List<Story> stories = await Future.wait(futures);
-//     for (int i = 0; i < stories.length; i++) {
-//       final page = StoryPage(page: i + 1, content: stories[i].pageText);
-//       setState(() {
-//         pages.add(page);
-//       });
-//     }
-//   }
+    Story firstPageStory = await api.getStory(psubmission.url, page: 1);
+    hasNextChapter = firstPageStory.submission != null
+        ? firstPageStory.submission!.series.meta.order.isNotEmpty &&
+            firstPageStory.submission!.series.meta.order.lastOrNull != psubmission.id
+        : false;
+    int index = firstPageStory.submission != null
+        ? firstPageStory.submission!.series.meta.order.indexWhere((c) => c == psubmission!.id)
+        : 0;
+    if (hasNextChapter) {
+      nextChapter = firstPageStory.submission!.series.meta.order[index + 1];
+    }
+    futures.add(Future.value(firstPageStory));
+    if (firstPageStory.meta?.pagesCount != null) {
+      for (int i = 2; i <= firstPageStory.meta!.pagesCount; i++) {
+        futures.add(api.getStory(psubmission.url, page: i));
+      }
+    }
 
-//   void _saveCurrentPage(int page) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     prefs.setInt('${submission.url}_currentpage', page);
-//     // ignore: avoid_print
-//     print("current page: $page");
-//   }
+    List<Story> stories = await Future.wait(futures);
+    for (int i = 0; i < stories.length; i++) {
+      final page = StoryPage(page: i + 1, content: stories[i].pageText!);
+      setState(() {
+        pages.add(page);
+      });
+    }
+  }
 
-//   void _saveScrollPosition(double position) async {
-//     final prefs = await SharedPreferences.getInstance();
-//     prefs.setDouble('${submission.url}_scrollPosition', position);
-//   }
+  @override
+  void initState() {
+    super.initState();
+    setInitState();
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+    ));
+  }
 
-//   Future<int> _getLastPage() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     int lastPage = prefs.getInt('${submission.url}_currentpage') ?? 0;
-//     return lastPage;
-//   }
+  @override
+  void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    controller.removeListener(() => prefsFunctions.saveCurrentPage(submission: submission, controller: controller));
+    controller.dispose();
+    scrollController
+        .removeListener(() => prefsFunctions.saveScrollPosition(submission: submission, scrollController: scrollController));
 
-//   Future<double> _getLastPagePosition() async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     double scrollPosition = prefs.getDouble('${submission.url}_scrollPosition') ?? 0.0;
-//     return scrollPosition;
-//   }
+    scrollController.dispose();
+    super.dispose();
+  }
 
-//   Future<List<dynamic>> _FetchLastPositions() async {
-//     int lastPage = await _getLastPage();
-//     double lastPosition = await _getLastPagePosition();
+  Future<void> downloadStory() async {
+    await dbFunctions.downloadStory(submission: submission, pages: pages, isDownloaded: isDownloaded).then(
+      (value) {
+        setState(() {
+          isDownloaded = value;
+        });
+      },
+    );
+  }
 
-//     return [lastPage, lastPosition];
-//   }
+  double mapValueToRange(double value, double oldMin, double oldMax, {double newMin = 0, double newMax = 100}) {
+    double newValue = (value - oldMin) / (oldMax - oldMin) * (newMax - newMin) + newMin;
+    print('old min: $oldMin, old max: $oldMax');
+    print('old val: $value, new val: $newValue');
+    return newValue;
+  }
 
-//   // ignore: non_constant_identifier_names
-//   // _JumpToLastPage() {
-//   //   _getLastPage().then((page) {
-//   //     WidgetsBinding.instance.addPostFrameCallback((_) {
-//   //       // controller.jumpToPage(page);
-//   //       controllerState.pageController.jumpToPage(page);
-//   //       print("jumping to page: $page");
-//   //       _getLastPagePosition().then((scrollPosition) {
-//   //         WidgetsBinding.instance.addPostFrameCallback((_) {
-//   //           controllerState.pages[page].scrollController.jumpTo(scrollPosition);
-//   //           print("jumping to position: $scrollPosition");
-//   //           // scrollController.jumpTo(scrollPosition);
-//   //         });
-//   //       });
-//   //     });
-//   //   });
-//   // }
+  void updateExistingLists(List<int> newLists) {
+    setState(() {
+      existingLists = newLists;
+    });
+  }
 
-//   @override
-//   void initState() {
-//     super.initState();
+  @override
+  Widget build(BuildContext context) {
+    // print(scrollController.offset);
+    if (isFabVisible) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack, overlays: []);
+    }
+    return FutureBuilder(
+      future: _fetchPagesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done || isBusy) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                isFabVisible = !isFabVisible;
+              });
+            },
+            child: Scaffold(
+              resizeToAvoidBottomInset: false,
+              // backgroundColor: Colors.grey[850],
+              body: SafeArea(
+                top: false,
+                bottom: false,
+                child: Stack(children: [
+                  body(),
+                  // slider(),
+                  SizedBox(
+                    height: kToolbarHeight + 30,
+                    child: AnimatedOpacity(
+                      opacity: isFabVisible ? 0.99 : 0.0, // Control the opacity with your condition
+                      duration: const Duration(milliseconds: 10), // Control the duration of the animation
+                      curve: Curves.easeInOut,
+                      child: AppBar(
+                        backgroundColor: Colors.grey[900],
+                        leading: IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        title: Text(
+                          submission.title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                        actions: [
+                          if (loginController.loginState == LoginState.loggedIn)
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () async {
+                                await showMoonModalBottomSheet(
+                                  enableDrag: true,
+                                  height: MediaQuery.of(context).size.height * 0.75,
+                                  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return BookmarksPopupMenu(
+                                        submission: widget.submission,
+                                        existingLists: existingLists,
+                                        onUpdateLists: updateExistingLists,
+                                        context: context);
+                                  },
+                                );
+                              },
+                              icon: existingLists.isEmpty
+                                  ? const Icon(
+                                      Icons.bookmark_border,
+                                    )
+                                  : const Icon(
+                                      Icons.bookmark,
+                                      color: kRed,
+                                    ),
+                            ),
+                          IconButton(
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () {
+                              knavigatorKey.currentState!
+                                  .push(MaterialPageRoute(
+                                      builder: (context) => StoryDetailsScreen(
+                                            submission: submission,
+                                          )))
+                                  .then((value) async {
+                                await updateLists();
+                                setState(() {});
+                              });
+                            },
+                            icon: const Icon(Icons.info),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+              floatingActionButton: Padding(
+                padding: const EdgeInsets.only(bottom: 20),
+                child: SpeedDial(
+                  backgroundColor: kRed,
+                  visible: isFabVisible,
+                  animatedIcon: AnimatedIcons.menu_close,
+                  children: [
+                    if (loginController.loginState == LoginState.loggedIn)
+                      SpeedDialChild(
+                        child: existingLists.isEmpty
+                            ? const Icon(
+                                Icons.bookmark_border,
+                              )
+                            : const Icon(
+                                Icons.bookmark,
+                                color: kRed,
+                              ),
+                        label: 'Bookmark',
+                        onTap: () async {
+                          await showMoonModalBottomSheet(
+                            enableDrag: true,
+                            height: MediaQuery.of(context).size.height * 0.75,
+                            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BookmarksPopupMenu(
+                                  submission: widget.submission,
+                                  existingLists: existingLists,
+                                  onUpdateLists: updateExistingLists,
+                                  context: context);
+                            },
+                          );
+                        },
+                      ),
+                    SpeedDialChild(
+                      child: Icon(
+                        Icons.file_download_outlined,
+                        color: isDownloaded ? kRed : null,
+                      ),
+                      label: isDownloaded ? 'Remove from Downloads' : 'Add to Downloads',
+                      onTap: () {
+                        downloadStory();
+                      },
+                    ),
+                    SpeedDialChild(
+                      child: const Icon(Icons.font_download),
+                      label: 'Font Settings',
+                      onTap: () async {
+                        await showMoonModalBottomSheet(
+                          enableDrag: true,
+                          height: MediaQuery.of(context).size.height * 0.3,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return FontSettingsPopupMenu(context: context);
+                          },
+                        );
+                      },
+                    ),
+                    SpeedDialChild(
+                      child: const Icon(Icons.info_outline),
+                      label: 'Details',
+                      onTap: () {
+                        knavigatorKey.currentState!.push(MaterialPageRoute(
+                            builder: (context) => StoryDetailsScreen(
+                                  submission: submission,
+                                )));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
 
-//     setInitState();
-//     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-//       systemNavigationBarColor: Colors.transparent,
-//       systemNavigationBarDividerColor: Colors.transparent,
-//     ));
-//   }
+  String getHtmlContent(String content) {
+    content = content.replaceAll("\n", '<br>');
+    content = content.replaceAll("\r", '<p style="margin:0; padding:0; height:10px;"></p>');
+    // content = content.replaceAll("</I>", "</I><br>");
+    // content = content.replaceAll("</U>", "</U><br>");
+    return content;
+  }
 
-//   @override
-//   void dispose() {
-//     // controller.removeListener(_saveCurrentPage);
-//     // controller.dispose();
-//     super.dispose();
-//   }
+  Widget body() {
+    return Obx(() {
+      List colourOptions = [
+        Theme.of(context).colorScheme.onSurfaceVariant,
+        Theme.of(context).colorScheme.onSurface,
+        Theme.of(context).colorScheme.secondary,
+      ];
+      Widget body = Padding(
+        padding: const EdgeInsets.only(bottom: 10, left: 10, right: 10, top: 5),
+        child: Column(
+          children: [
+            Expanded(
+              child: PageView(
+                controller: controller,
+                children: <Widget>[
+                  // slider(),
+                  for (StoryPage page in pages)
+                    Stack(children: [
+                      SingleChildScrollView(
+                        key: PageStorageKey<String>(submission.url + page.page.toString()),
+                        scrollDirection: Axis.vertical,
+                        controller: scrollController,
+                        child: Center(
+                          child: Column(
+                            children: [
+                              AnimatedContainer(
+                                height: 0.0,
+                                duration: const Duration(milliseconds: 500),
+                                curve: Curves.easeInOut,
+                                child: Container(
+                                  color: Colors.transparent,
+                                ),
+                              ),
+                              // SizedBox(
+                              //   height: isFabVisible ? 30 : 30,
+                              // ),
+                              Html(
+                                style: {
+                                  'body': Style(
+                                    fontSize: FontSize(uiController.fontSize),
+                                    color: colourOptions[uiController.fontColor],
+                                    lineHeight: LineHeight(uiController.lineHeight),
+                                  ),
+                                  'u': Style(
+                                    color: kRed,
+                                    textDecorationColor: kRed,
+                                  ),
+                                  'i': Style(
+                                    color: Colors.white60,
+                                  ),
+                                },
+                                data: getHtmlContent(page.content),
+                              ),
+                              if (page.page == pages.length && hasNextChapter)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      setState(() {
+                                        isBusy = true;
+                                      });
+                                      await api
+                                          .getStory(nextChapter.toString())
+                                          .then((value) => {setInitState(setSubmission: value.submission)});
+                                    },
+                                    child: const Text('Next'),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ]),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: SmoothPageIndicator(
+                controller: controller,
+                count: pages.isEmpty ? 1 : pages.length,
+                effect: const ExpandingDotsEffect(
+                  dotHeight: 8,
+                  dotWidth: 8,
+                  activeDotColor: kRed,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 
-//   downloadStory() async {
-//     DBHelper dbHelper = DBHelper();
-//     await dbHelper.init();
+      prefsFunctions.jumpToLastPage(submission: submission, controller: controller, scrollController: scrollController);
 
-//     if (isDownloaded) {
-//       await dbHelper.removeDownload(submission.url);
-//       setState(() {
-//         isDownloaded = false;
-//       });
-//       return;
-//     } else {
-//       StoryDownload download = StoryDownload(
-//         url: submission.url,
-//         submission: submission,
-//         pages: pages,
-//       );
-//       await dbHelper.addDownload(submission.url, download);
-//       setState(() {
-//         isDownloaded = true;
-//       });
-//     }
-//   }
-
-//   double mapValueToRange(double value, double oldMin, double oldMax, {double newMin = 0, double newMax = 100}) {
-//     double newValue = (value - oldMin) / (oldMax - oldMin) * (newMax - newMin) + newMin;
-//     print('old min: $oldMin, old max: $oldMax');
-//     print('old val: $value, new val: $newValue');
-//     return newValue;
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // print(scrollController.offset);
-//     if (isFabVisible) {
-//       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-//     } else {
-//       SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack, overlays: []);
-//     }
-//     return FutureBuilder(
-//       future: _fetchPagesFuture,
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState != ConnectionState.done || isBusy) {
-//           return const Center(child: CircularProgressIndicator());
-//         } else {
-//           return GestureDetector(
-//             onTap: () {
-//               setState(() {
-//                 isFabVisible = !isFabVisible;
-//               });
-//             },
-//             child: Scaffold(
-//               resizeToAvoidBottomInset: false,
-//               backgroundColor: Colors.grey[850],
-//               body: SafeArea(
-//                 top: false,
-//                 bottom: false,
-//                 child: Stack(children: [
-//                   ReaderView(
-//                     controllerState: controllerState,
-//                     isFullPage: false,
-//                     onPageChanged: (index) async {
-//                       _saveCurrentPage(index);
-//                     },
-//                     onScrollPositionChanged: (position) async {
-//                       _saveScrollPosition(position);
-//                     },
-//                   ),
-//                   // slider(),
-//                   SizedBox(
-//                     height: kToolbarHeight + 20,
-//                     child: AnimatedOpacity(
-//                       opacity: isFabVisible ? 0.98 : 0.0, // Control the opacity with your condition
-//                       duration: const Duration(milliseconds: 10), // Control the duration of the animation
-//                       curve: Curves.easeInOut,
-//                       child: AppBar(
-//                         backgroundColor: Colors.grey[900],
-//                         leading: IconButton(
-//                           visualDensity: VisualDensity.compact,
-//                           icon: const Icon(Icons.arrow_back),
-//                           onPressed: () {
-//                             Navigator.of(context).pop();
-//                           },
-//                         ),
-//                         title: Text(
-//                           submission.title,
-//                           style: const TextStyle(
-//                             fontSize: 18,
-//                           ),
-//                         ),
-//                         actions: [
-//                           IconButton(
-//                             visualDensity: VisualDensity.compact,
-//                             onPressed: () {
-//                               knavigatorKey.currentState!.push(MaterialPageRoute(
-//                                   builder: (context) => StoryDetailsScreen(
-//                                         submission: submission,
-//                                       )));
-//                             },
-//                             icon: const Icon(Icons.info_outline),
-//                           ),
-//                         ],
-//                       ),
-//                     ),
-//                   ),
-//                 ]),
-//               ),
-//               floatingActionButton: Padding(
-//                 padding: const EdgeInsets.only(bottom: 20),
-//                 child: SpeedDial(
-//                   backgroundColor: kred,
-//                   visible: isFabVisible,
-//                   animatedIcon: AnimatedIcons.menu_close,
-//                   children: [
-//                     SpeedDialChild(
-//                       child: const Icon(
-//                         Icons.bookmark_border,
-//                       ),
-//                       label: 'Bookmark',
-//                       onTap: () async {
-//                         await showDialog(
-//                           context: context,
-//                           builder: (BuildContext context) {
-//                             return BookmarksPopupMenu(
-//                                 submission: widget.submission,
-//                                 existingLists: existingLists,
-//                                 onUpdateLists: updateExistingLists,
-//                                 context: context);
-//                           },
-//                         );
-//                         // BookmarksPopupMenu(
-//                         //   submission: submission,
-//                         //   context: context,
-//                         // );
-//                       },
-//                     ),
-//                     // if (lists.isNotEmpty)
-//                     SpeedDialChild(
-//                       child: Icon(
-//                         Icons.file_download_outlined,
-//                         color: isDownloaded ? kred : null,
-//                       ),
-//                       label: isDownloaded ? 'Remove from Downloads' : 'Add to Downloads',
-//                       onTap: () {
-//                         downloadStory();
-//                       },
-//                     ),
-//                     SpeedDialChild(
-//                       child: const Icon(Icons.info_outline),
-//                       label: 'Details1',
-//                       onTap: () {
-//                         knavigatorKey.currentState!.push(MaterialPageRoute(
-//                             builder: (context) => StoryDetailsScreen(
-//                                   submission: submission,
-//                                 )));
-//                       },
-//                     ),
-//                   ],
-//                 ),
-//               ),
-//             ),
-//           );
-//         }
-//       },
-//     );
-//   }
-// }
+      return body;
+    });
+  }
+}

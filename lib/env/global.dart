@@ -11,6 +11,8 @@ import 'package:lit_reader/controllers/lists_controller.dart';
 import 'package:lit_reader/controllers/log_controller.dart';
 import 'package:lit_reader/controllers/login_controller.dart';
 import 'package:lit_reader/controllers/search_controller.dart' as searchController;
+import 'package:lit_reader/controllers/ui_controller.dart';
+import 'package:lit_reader/controllers/update_controller.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -56,6 +58,8 @@ Future<void> getAppVersion() async {
   versionString = packageInfo.version; // Version name
 }
 
+final themeMode = ThemeMode.dark.obs;
+
 //controllers
 LogController get logController => Get.put(LogController());
 DioController get dioController => Get.put(DioController());
@@ -63,3 +67,5 @@ LoginController get loginController => Get.put(LoginController());
 searchController.SearchController get litSearchController => Get.put(searchController.SearchController());
 HistoryDownloadController get historyDownloadController => Get.put(HistoryDownloadController());
 ListController get listController => Get.put(ListController());
+UIController get uiController => Get.put(UIController());
+UpdateController get updateController => Get.put(UpdateController());

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lit_reader/env/colors.dart';
 import 'package:lit_reader/env/global.dart';
 import 'package:lit_reader/screens/log_screen.dart';
 import 'package:lit_reader/screens/login.dart';
@@ -55,7 +56,22 @@ class DrawerWidget extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: Text('v$versionString'),
+            title: Row(
+              children: [
+                Text('V$versionString'),
+                const SizedBox(width: 8),
+                if (updateController.isUpdateAvailable)
+                  Text(
+                    'Update Available - V${updateController.latestVersion}',
+                    style: const TextStyle(color: kRed, fontStyle: FontStyle.italic),
+                  ),
+              ],
+            ),
+            onTap: updateController.isUpdateAvailable
+                ? () {
+                    updateController.launchUpdateURL();
+                  }
+                : null,
           ),
         ],
       ),

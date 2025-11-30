@@ -54,7 +54,7 @@ class _BookmarksPopupMenuState extends State<BookmarksPopupMenu> {
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
-            Text("Lists", style: Theme.of(context).textTheme.headlineMedium),
+            Text("Lists", style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 20),
             if (favoriteitems.isEmpty) Text("No lists available", style: Theme.of(context).textTheme.bodyLarge),
             if (favoriteitems.isNotEmpty)

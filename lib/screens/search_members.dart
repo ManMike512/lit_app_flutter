@@ -180,7 +180,7 @@ class _SearchMembersScreenState extends State<SearchMembersScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              Text("Filters", style: Theme.of(context).textTheme.headlineMedium),
+              Text("Filters", style: Theme.of(context).textTheme.headlineSmall),
               const SizedBox(height: 20),
               Expanded(child: SingleChildScrollView(child: searchFilter())),
             ],
