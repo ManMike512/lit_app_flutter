@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -13,25 +15,42 @@ class LogScreen extends StatefulWidget {
 
 class _LogScreenState extends State<LogScreen> {
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<List<LogItem>>? _logSubscription;
+  bool _followTail = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      _scrollController.addListener(() {
-        if (_scrollController.offset >= _scrollController.position.maxScrollExtent) {
-          logController.logsRx.listen((_) {
-            _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-                duration: Durations.long4, curve: Curves.easeInOut);
-          });
-        }
-      });
-      // logController.logsRx.listen((_) {
-      //   _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-      //       duration: Durations.long4, curve: Curves.easeInOut);
-      // });
+    _scrollController.addListener(() {
+      if (!_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      _followTail = position.pixels >= position.maxScrollExtent;
     });
+
+    // Auto-scroll to the newest entry while the user is at the bottom.
+    // This subscription must be cancelled in dispose(): it fires synchronously
+    // from DioLoggingInterceptor, and touching a detached ScrollController
+    // throws "Bad state: No element", which would fail every request.
+    _logSubscription = logController.logsRx.listen((_) {
+      if (!mounted || !_followTail) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+        _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+            duration: Durations.long4, curve: Curves.easeInOut);
+      });
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
+  }
+
+  @override
+  void dispose() {
+    _logSubscription?.cancel();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
