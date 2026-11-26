@@ -20,8 +20,8 @@ class LogController extends GetxController {
 
   void addLog(String log) {
     LogItem logItem = LogItem(log, DateTime.now());
-    if (log.length > logLimit) {
-      popLog();
+    while (_logs.length >= logLimit) {
+      _logs.removeAt(0);
     }
     _logs.add(logItem);
     if (kDebugMode) {
