@@ -32,7 +32,9 @@ class API {
   Future<Token> login(String username, String password) async {
     Account account = Account(login: username, password: password);
     try {
-      dioController.dio.interceptors.add(CookieManager(cookieJar));
+      if (!dioController.dio.interceptors.any((i) => i is CookieManager)) {
+        dioController.dio.interceptors.add(CookieManager(cookieJar));
+      }
       const url = '${authUrl}login';
 
       final response = await dioController.dio.post(
